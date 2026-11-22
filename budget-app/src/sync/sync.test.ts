@@ -57,8 +57,8 @@ describe('암호화', () => {
     const check = await makeKeyCheck(key)
     expect(await verifyKeyCheck(key, check)).toBe(true)
     expect(await verifyKeyCheck(other, check)).toBe(false)
-    // 암호문에 평문이 드러나지 않음
-    expect(s.ciphertext).not.toContain('a')
+    // 암호문(복호화 전 바이트)에 평문이 드러나지 않음
+    expect(atob(s.ciphertext)).not.toContain('"a":1')
   })
 })
 
