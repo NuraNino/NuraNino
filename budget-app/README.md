@@ -28,7 +28,7 @@
 npm install
 npm run dev       # 개발 서버
 npm test          # 단위 테스트
-npm run build     # dist/ 에 정적 파일 생성 (GitHub Pages 등 아무 곳에나 올리면 됨)
+npm run build     # dist/ 에 정적 파일 생성
 ```
 
 실제 엑셀 파일로 가져오기 결과 확인: `XLSX=/경로/가계부.xlsx npx vitest run scripts/`
@@ -36,3 +36,8 @@ npm run build     # dist/ 에 정적 파일 생성 (GitHub Pages 등 아무 곳�
 ## 알려진 한계 / 다음 단계
 - 두 사람이 각자 휴대폰에서 쓰면 데이터가 따로 저장됩니다 → 지금은 백업 파일로 옮기고, 다음 단계로 클라우드 동기화(Supabase 등) 추가 예정.
 - 할부 관리, 반복 지출 자동 등록, 연간 이벤트(자동차세) 알림, 카드 명세서 CSV 가져오기는 2차 범위.
+
+## 배포 (GitHub Pages)
+`.github/workflows/deploy-budget-app.yml`이 `main`에 `budget-app/` 변경이 올라오면 테스트·빌드 후 Pages에 배포합니다.
+처음 한 번은 저장소 **Settings → Pages → Build and deployment → Source** 를 **GitHub Actions** 로 바꿔야 합니다.
+배포 주소: https://nuranino.github.io/NuraNino/
