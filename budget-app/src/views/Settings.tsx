@@ -5,6 +5,7 @@ import { createDefaultData, uid } from '../domain/defaults'
 import { monthLabel, todayISO } from '../domain/calc'
 import { GROUPS, type Group } from '../domain/types'
 import { Card, MoneyInput } from '../components'
+import { ACCENTS, MODES, applyTheme, loadTheme, saveTheme, type Theme } from '../theme'
 
 async function readWorkbook(file: File): Promise<Workbook> {
   const { default: readXlsxFile, readSheetNames } = await import('read-excel-file')
@@ -366,9 +367,59 @@ function TitheSettings() {
   )
 }
 
+function ThemeSettings() {
+  const [theme, setTheme] = useState<Theme>(loadTheme)
+  const update = (patch: Partial<Theme>) => {
+    const next = { ...theme, ...patch }
+    setTheme(next)
+    saveTheme(next)
+    applyTheme(next)
+  }
+  const dark =
+    theme.mode === 'dark' || (theme.mode === 'system' && typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches)
+
+  return (
+    <Card title="화면 테마">
+      <div className="form">
+        <div className="seg three" role="radiogroup" aria-label="밝기">
+          {MODES.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              role="radio"
+              aria-checked={theme.mode === m.id}
+              className={theme.mode === m.id ? 'on' : ''}
+              onClick={() => update({ mode: m.id })}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+        <div className="swatches" role="radiogroup" aria-label="색상">
+          {ACCENTS.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              role="radio"
+              aria-checked={theme.accent === a.id}
+              className="swatch"
+              onClick={() => update({ accent: a.id })}
+            >
+              <span className="swatch-dot" style={{ background: dark ? a.dark : a.light }} aria-hidden />
+              {a.label}
+            </button>
+          ))}
+        </div>
+        <p className="small muted">테마는 이 기기에만 저장되며, 백업 파일에는 포함되지 않습니다.</p>
+      </div>
+    </Card>
+  )
+}
+
 export function Settings() {
   return (
     <div className="stack">
+      <ThemeSettings />
       <ExcelImport />
       <Backup />
       <TitheSettings />

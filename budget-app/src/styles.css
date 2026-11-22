@@ -1,3 +1,47 @@
+/* ---------- 테마 ----------
+ * 모드: <html data-mode="light|dark"> (없으면 기기 설정을 따름)
+ * 색상: <html data-accent="green|blue|purple|rose|orange|slate">
+ * 각 색상 테마는 라이트용(--a-light*)과 다크용(--a-dark*) 값을 함께 정의하고,
+ * 모드 블록이 그중 하나를 --primary 로 고릅니다.
+ */
+:root,
+:root[data-accent='green'] {
+  --a-light: #1f6f5c;
+  --a-light-soft: #e3f1ec;
+  --a-dark: #4fb79a;
+  --a-dark-soft: #1f3a32;
+}
+:root[data-accent='blue'] {
+  --a-light: #2559c7;
+  --a-light-soft: #e5edfb;
+  --a-dark: #6c9cff;
+  --a-dark-soft: #1d2a45;
+}
+:root[data-accent='purple'] {
+  --a-light: #6b46c1;
+  --a-light-soft: #efe9fb;
+  --a-dark: #a68bf0;
+  --a-dark-soft: #2c2442;
+}
+:root[data-accent='rose'] {
+  --a-light: #b8325f;
+  --a-light-soft: #fbe8ef;
+  --a-dark: #f283ab;
+  --a-dark-soft: #3d1f2b;
+}
+:root[data-accent='orange'] {
+  --a-light: #b4510b;
+  --a-light-soft: #fdede1;
+  --a-dark: #f59e5b;
+  --a-dark-soft: #3b2616;
+}
+:root[data-accent='slate'] {
+  --a-light: #3f4a55;
+  --a-light-soft: #e9edf1;
+  --a-dark: #aab6c2;
+  --a-dark-soft: #262d34;
+}
+
 :root {
   --bg: #f6f7f5;
   --surface: #ffffff;
@@ -5,9 +49,9 @@
   --text: #1d2420;
   --muted: #67706b;
   --border: #e1e5e1;
-  --primary: #1f6f5c;
+  --primary: var(--a-light);
   --primary-ink: #ffffff;
-  --primary-soft: #e3f1ec;
+  --primary-soft: var(--a-light-soft);
   --neg: #c0392b;
   --pos: #1f7a4d;
   --warn: #c98a12;
@@ -19,16 +63,16 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-mode='light']) {
     --bg: #121614;
     --surface: #1a201d;
     --surface-2: #232a26;
     --text: #e7ece9;
     --muted: #9aa59f;
     --border: #2e3732;
-    --primary: #4fb79a;
+    --primary: var(--a-dark);
     --primary-ink: #0d1411;
-    --primary-soft: #1f3a32;
+    --primary-soft: var(--a-dark-soft);
     --neg: #ff7b6b;
     --pos: #5fd39a;
     --warn: #f0b955;
@@ -37,6 +81,24 @@
     --shadow: none;
     color-scheme: dark;
   }
+}
+:root[data-mode='dark'] {
+  --bg: #121614;
+  --surface: #1a201d;
+  --surface-2: #232a26;
+  --text: #e7ece9;
+  --muted: #9aa59f;
+  --border: #2e3732;
+  --primary: var(--a-dark);
+  --primary-ink: #0d1411;
+  --primary-soft: var(--a-dark-soft);
+  --neg: #ff7b6b;
+  --pos: #5fd39a;
+  --warn: #f0b955;
+  --alert-bg: #3a1f1c;
+  --info-bg: #1b2a3a;
+  --shadow: none;
+  color-scheme: dark;
 }
 
 * {
@@ -746,4 +808,38 @@ input[type='date']::-webkit-datetime-edit {
 }
 .form select {
   height: 42px;
+}
+
+/* ---------- 테마 선택 ---------- */
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 8px;
+}
+.swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 4px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 13px;
+}
+.swatch[aria-checked='true'] {
+  border-color: var(--primary);
+  outline: 2px solid var(--primary);
+  outline-offset: -1px;
+  font-weight: 700;
+}
+.swatch-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08);
+}
+.seg.three {
+  grid-template-columns: repeat(3, 1fr);
 }
