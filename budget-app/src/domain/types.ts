@@ -23,6 +23,7 @@ export interface Transaction {
   memo: string // 내용
   amount: number // 원 단위 정수
   note?: string // 비고
+  recurringId?: string // 반복 항목에서 만들어진 경우
 }
 
 /** 실제 수입 한 건 (엑셀 '이번 달 실 수입 내역') */
@@ -32,6 +33,20 @@ export interface Income {
   source: string // 내용: 월급, 부업 수입, 이월금 …
   amount: number
   note?: string
+  recurringId?: string
+}
+
+/** 반복 항목: 매달(또는 지정한 달) 같은 지출·수입을 자동으로 등록 */
+export interface RecurringRule {
+  id: string
+  kind: 'expense' | 'income'
+  name: string // 지출의 '내용' 또는 수입의 '내용(source)'
+  amount: number
+  day: number // 1–31 (그 달에 없는 날이면 말일)
+  months: number[] // 비어 있으면 매달, 예: [6, 12] = 자동차세
+  categoryId?: string // 지출
+  paymentMethodId?: string // 지출
+  active: boolean
 }
 
 /** 수입 계획 한 줄 (엑셀 '이번 달 수입 계획') */
@@ -73,4 +88,6 @@ export interface BudgetData {
   incomes: Income[]
   plans: Record<string, MonthPlan> // 'YYYY-MM' → 계획
   settings: Settings
+  recurring?: RecurringRule[]
+  recurringSkips?: Record<string, string[]> // 'YYYY-MM' → 이번 달 건너뛴 반복 항목 id
 }

@@ -2,6 +2,7 @@ import { useStore } from '../store'
 import { addMonths, monthLabel, monthSummary, planOf, titheFor, won } from '../domain/calc'
 import { Card, Diff, MoneyInput } from '../components'
 import type { BudgetLine } from '../domain/types'
+import { recurringBudget } from '../domain/recurring'
 
 export function Budget() {
   const { data, month, updatePlan } = useStore()
@@ -11,6 +12,18 @@ export function Budget() {
   const prevPlan = data.plans[prev]
   const tithe = titheFor(data, month)
   const titheCat = data.categories.find((c) => c.id === data.settings.tithe.categoryId)
+
+  const rec = recurringBudget(data, month)
+  const recDiffers = [...rec].filter(([id, amt]) => (plan.budgets[id]?.amount ?? 0) !== amt)
+  const fillFromRecurring = () => {
+    const names = recDiffers.map(([id, amt]) => `${data.categories.find((c) => c.id === id)?.name} ${won(amt)}`).join(', ')
+    if (!confirm(`반복 항목 합계로 예산을 바꿀까요?\n${names}`)) return
+    updatePlan(month, (p) => {
+      const budgets = { ...p.budgets }
+      for (const [id, amt] of rec) budgets[id] = { ...(budgets[id] ?? {}), amount: amt }
+      return { ...p, budgets }
+    })
+  }
 
   const setLine = (categoryId: string, patch: Partial<BudgetLine>) =>
     updatePlan(month, (p) => {
@@ -44,6 +57,11 @@ export function Budget() {
       </div>
 
       <div className="row-end">
+        {recDiffers.length > 0 && (
+          <button className="btn" onClick={fillFromRecurring}>
+            반복 항목으로 예산 채우기 ({recDiffers.length})
+          </button>
+        )}
         {prevPlan && (
           <button className="btn" onClick={copyPrev}>
             {monthLabel(prev)} 예산 복사
