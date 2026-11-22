@@ -4,6 +4,7 @@ import { categoryMap, monthOf, sum, todayISO, txOfMonth, weekOfMonth, won } from
 import { uid } from '../domain/defaults'
 import { GROUPS, type Group, type Transaction } from '../domain/types'
 import { Card, Empty, MoneyInput } from '../components'
+import { RecurringDue } from './Recurring'
 
 interface Draft {
   date: string
@@ -17,7 +18,7 @@ interface Draft {
 
 const defaultDate = (month: string) => (monthOf(todayISO()) === month ? todayISO() : `${month}-01`)
 
-export function Transactions() {
+export function Transactions({ go }: { go: (tab: string) => void }) {
   const { data, setData, month } = useStore()
   const cats = useMemo(() => categoryMap(data), [data])
   const activeCats = (g: Group) => data.categories.filter((c) => c.group === g && !c.archived)
@@ -126,6 +127,7 @@ export function Transactions() {
 
   return (
     <div className="stack">
+      <RecurringDue onManage={() => go('settings')} />
       <Card title={editing ? '지출 수정' : '지출 입력'}>
         <form className="form" onSubmit={submit}>
           <div className="seg" role="radiogroup" aria-label="큰 항목">

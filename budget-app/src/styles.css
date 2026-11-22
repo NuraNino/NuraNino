@@ -882,3 +882,79 @@ input[type='date']::-webkit-datetime-edit {
 .seg.three {
   grid-template-columns: repeat(3, 1fr);
 }
+
+/* ---------- 반복 항목 ---------- */
+.due {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 4px 10px;
+}
+.due .tx-date {
+  width: auto;
+}
+.due-amt {
+  width: 120px;
+}
+.due-amt input {
+  padding: 6px 8px !important;
+}
+.due-actions {
+  grid-column: 2 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.due-state {
+  font-size: 13px;
+  white-space: nowrap;
+}
+.due-done .tx-memo,
+.due-skipped .tx-memo {
+  color: var(--muted);
+}
+.due-skipped .tx-memo {
+  text-decoration: line-through;
+}
+.rule {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.rule.archived .tx-memo,
+.rule.archived .tx-amt {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.rule-form {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  background: var(--surface-2);
+}
+.seg.two {
+  grid-template-columns: repeat(2, 1fr);
+}
+.month-chips {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+.month-chips .chip {
+  justify-content: center;
+  padding: 4px 0;
+  gap: 4px;
+  font-size: 13px !important;
+}
+.month-chips .chip input {
+  margin: 0;
+}
+@media (max-width: 380px) {
+  .month-chips {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.link.small {
+  font-size: 13px;
+}

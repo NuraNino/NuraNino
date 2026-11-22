@@ -75,7 +75,7 @@ export function App() {
 
       <main className="content">
         {tab === 'home' && <Dashboard go={setTab} />}
-        {tab === 'tx' && <Transactions />}
+        {tab === 'tx' && <Transactions go={setTab} />}
         {tab === 'income' && <Income />}
         {tab === 'budget' && <Budget />}
         {tab === 'reports' && <Reports />}

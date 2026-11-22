@@ -1,12 +1,15 @@
 import { useStore } from '../store'
 import { monthSummary, won, carryoverFor } from '../domain/calc'
 import { Bar, Card, Diff, Empty } from '../components'
+import { dueItems } from '../domain/recurring'
+import { InstallmentSummary } from './Installments'
 
 export function Dashboard({ go }: { go: (tab: string) => void }) {
   const { data, month } = useStore()
   const s = monthSummary(data, month)
   const carry = carryoverFor(data, month)
   const hasPlan = s.expensePlanned > 0 || s.incomePlanned > 0
+  const pending = dueItems(data, month).filter((d) => d.status === 'pending')
   const overs = s.groups.flatMap((g) => g.categories).filter((c) => c.actual > c.planned && c.actual > 0)
 
   return (
@@ -47,6 +50,12 @@ export function Dashboard({ go }: { go: (tab: string) => void }) {
           <button className="link" onClick={() => go('settings')}>엑셀 가져오기</button>
         </div>
       )}
+      {pending.length > 0 && (
+        <div className="alert info">
+          이번 달 반복 항목 {pending.length}건({won(pending.reduce((s, p) => s + p.rule.amount, 0))})이 등록을 기다리고 있습니다.{' '}
+          <button className="link" onClick={() => go('tx')}>지출에서 등록</button>
+        </div>
+      )}
       {carry !== null && !data.incomes.some((i) => i.date.startsWith(month) && i.source === '이월금') && (
         <div className="alert info">
           전월 잔액 {won(carry)}을 이월금으로 넣을 수 있습니다.{' '}
@@ -73,6 +82,8 @@ export function Dashboard({ go }: { go: (tab: string) => void }) {
           ))}
         </div>
       </Card>
+
+      <InstallmentSummary />
 
       <Card title="예산 초과 항목">
         {overs.length === 0 ? (
