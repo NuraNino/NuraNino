@@ -1,7 +1,10 @@
 import { useStore } from '../store'
 import { addMonths, monthLabel, monthSummary, planOf, titheFor, won } from '../domain/calc'
 import { Card, Diff, MoneyInput } from '../components'
-import type { BudgetLine } from '../domain/types'
+import type { BudgetLine, Group } from '../domain/types'
+
+/** 예산 화면 표시 순서 (엑셀 지출계획 시트와 같은 흐름) */
+const BUDGET_ORDER: Group[] = ['예비비', '고정비', '저축', '생활비']
 import { recurringBudget } from '../domain/recurring'
 
 export function Budget() {
@@ -86,7 +89,7 @@ export function Budget() {
         </Card>
       )}
 
-      {s.groups.map((g) => (
+      {[...s.groups].sort((a, b) => BUDGET_ORDER.indexOf(a.group) - BUDGET_ORDER.indexOf(b.group)).map((g) => (
         <Card
           key={g.group}
           title={
