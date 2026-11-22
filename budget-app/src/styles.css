@@ -42,13 +42,20 @@
   --a-dark-soft: #262d34;
 }
 
+/* 모드별 기본값. 배경·카드·테두리는 회색(--g-*)에 색상 테마(--tint)를 살짝 섞어 만듭니다. */
 :root {
-  --bg: #f6f7f5;
-  --surface: #ffffff;
-  --surface-2: #f0f2ef;
-  --text: #1d2420;
-  --muted: #67706b;
-  --border: #e1e5e1;
+  --tint: var(--a-light);
+  --g-bg: #f5f6f6;
+  --g-surface: #ffffff;
+  --g-surface-2: #eff0f0;
+  --g-border: #e0e2e2;
+  --g-text: #1d2121;
+  --g-muted: #676d6d;
+  --tint-bg: 5%;
+  --tint-surface: 1.5%;
+  --tint-surface-2: 6%;
+  --tint-border: 10%;
+  --tint-text: 8%;
   --primary: var(--a-light);
   --primary-ink: #ffffff;
   --primary-soft: var(--a-light-soft);
@@ -64,14 +71,20 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-mode='light']) {
-    --bg: #121614;
-    --surface: #1a201d;
-    --surface-2: #232a26;
-    --text: #e7ece9;
-    --muted: #9aa59f;
-    --border: #2e3732;
+    --tint: var(--a-dark);
+    --g-bg: #111213;
+    --g-surface: #18191b;
+    --g-surface-2: #212225;
+    --g-border: #2c2e31;
+    --g-text: #e8eaea;
+    --g-muted: #9a9fa1;
+    --tint-bg: 6%;
+    --tint-surface: 7%;
+    --tint-surface-2: 9%;
+    --tint-border: 14%;
+    --tint-text: 6%;
     --primary: var(--a-dark);
-    --primary-ink: #0d1411;
+    --primary-ink: #101112;
     --primary-soft: var(--a-dark-soft);
     --neg: #ff7b6b;
     --pos: #5fd39a;
@@ -83,14 +96,20 @@
   }
 }
 :root[data-mode='dark'] {
-  --bg: #121614;
-  --surface: #1a201d;
-  --surface-2: #232a26;
-  --text: #e7ece9;
-  --muted: #9aa59f;
-  --border: #2e3732;
+  --tint: var(--a-dark);
+  --g-bg: #111213;
+  --g-surface: #18191b;
+  --g-surface-2: #212225;
+  --g-border: #2c2e31;
+  --g-text: #e8eaea;
+  --g-muted: #9a9fa1;
+  --tint-bg: 6%;
+  --tint-surface: 7%;
+  --tint-surface-2: 9%;
+  --tint-border: 14%;
+  --tint-text: 6%;
   --primary: var(--a-dark);
-  --primary-ink: #0d1411;
+  --primary-ink: #101112;
   --primary-soft: var(--a-dark-soft);
   --neg: #ff7b6b;
   --pos: #5fd39a;
@@ -99,6 +118,26 @@
   --info-bg: #1b2a3a;
   --shadow: none;
   color-scheme: dark;
+}
+
+/* color-mix 미지원 브라우저(구형 iOS 등)는 회색 그대로 사용 */
+:root {
+  --bg: var(--g-bg);
+  --surface: var(--g-surface);
+  --surface-2: var(--g-surface-2);
+  --border: var(--g-border);
+  --text: var(--g-text);
+  --muted: var(--g-muted);
+}
+@supports (color: color-mix(in srgb, red, blue)) {
+  :root {
+    --bg: color-mix(in srgb, var(--tint) var(--tint-bg), var(--g-bg));
+    --surface: color-mix(in srgb, var(--tint) var(--tint-surface), var(--g-surface));
+    --surface-2: color-mix(in srgb, var(--tint) var(--tint-surface-2), var(--g-surface-2));
+    --border: color-mix(in srgb, var(--tint) var(--tint-border), var(--g-border));
+    --text: color-mix(in srgb, var(--tint) var(--tint-text), var(--g-text));
+    --muted: color-mix(in srgb, var(--tint) var(--tint-text), var(--g-muted));
+  }
 }
 
 * {

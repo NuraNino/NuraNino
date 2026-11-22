@@ -50,7 +50,16 @@ export function applyTheme(t: Theme) {
   if (t.mode === 'system') root.removeAttribute('data-mode')
   else root.setAttribute('data-mode', t.mode)
   root.setAttribute('data-accent', t.accent)
-  // 상태 표시줄 색을 현재 배경색과 맞춤
-  const bg = getComputedStyle(root).getPropertyValue('--bg').trim()
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', bg || '#f6f7f5')
+  // 상태 표시줄 색을 현재 배경색과 맞춤 (styles.css 의 --bg 계산과 같은 값)
+  const dark = t.mode === 'dark' || (t.mode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+  const a = ACCENTS.find((x) => x.id === t.accent) ?? ACCENTS[0]
+  const bg = dark ? mix(a.dark, '#111213', 0.06) : mix(a.light, '#f5f6f6', 0.05)
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', bg)
+}
+
+/** hex 두 색을 ratio 비율로 섞음 (CSS color-mix in srgb 와 동일) */
+function mix(tint: string, base: string, ratio: number): string {
+  const rgb = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))
+  const [t, b] = [rgb(tint), rgb(base)]
+  return '#' + t.map((v, i) => Math.round(v * ratio + b[i] * (1 - ratio)).toString(16).padStart(2, '0')).join('')
 }
