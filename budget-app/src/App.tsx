@@ -7,6 +7,8 @@ import { Income } from './views/Income'
 import { Budget } from './views/Budget'
 import { Reports } from './views/Reports'
 import { Settings } from './views/Settings'
+import { SyncBadge } from './views/SyncSettings'
+import { pendingInvite } from './sync/SyncProvider'
 
 const TABS = [
   { id: 'home', label: '요약', icon: '◎' },
@@ -20,6 +22,7 @@ type TabId = (typeof TABS)[number]['id']
 
 const TAB_KEY = 'household-budget:tab'
 const initialTab = (): TabId => {
+  if (pendingInvite()) return 'settings'
   try {
     const t = localStorage.getItem(TAB_KEY)
     if (TABS.some((x) => x.id === t)) return t as TabId
@@ -45,7 +48,10 @@ export function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <h1 className="brand">우리집 가계부</h1>
+        <div className="brand-wrap">
+          <h1 className="brand">우리집 가계부</h1>
+          <SyncBadge onClick={() => setTab('settings')} />
+        </div>
         <div className="month-nav" aria-label="월 선택">
           <button className="icon-btn" onClick={() => setMonth(addMonths(month, -1))} aria-label="이전 달">
             ‹

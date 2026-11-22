@@ -7,6 +7,7 @@ import { GROUPS, type Group } from '../domain/types'
 import { Card, MoneyInput } from '../components'
 import { RecurringSettings } from './Recurring'
 import { InstallmentSettings } from './Installments'
+import { SyncSettings } from './SyncSettings'
 import { ACCENTS, MODES, applyTheme, loadTheme, saveTheme, type Theme } from '../theme'
 
 async function readWorkbook(file: File): Promise<Workbook> {
@@ -421,6 +422,7 @@ function ThemeSettings() {
 export function Settings() {
   return (
     <div className="stack">
+      <SyncSettings />
       <ThemeSettings />
       <ExcelImport />
       <RecurringSettings />
