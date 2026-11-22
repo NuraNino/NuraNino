@@ -6,6 +6,7 @@ import { monthLabel, todayISO } from '../domain/calc'
 import { GROUPS, type Group } from '../domain/types'
 import { Card, MoneyInput } from '../components'
 import { RecurringSettings } from './Recurring'
+import { InstallmentSettings } from './Installments'
 import { ACCENTS, MODES, applyTheme, loadTheme, saveTheme, type Theme } from '../theme'
 
 async function readWorkbook(file: File): Promise<Workbook> {
@@ -423,6 +424,7 @@ export function Settings() {
       <ThemeSettings />
       <ExcelImport />
       <RecurringSettings />
+      <InstallmentSettings />
       <Backup />
       <TitheSettings />
       <Categories />

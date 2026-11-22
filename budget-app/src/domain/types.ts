@@ -47,6 +47,21 @@ export interface RecurringRule {
   categoryId?: string // 지출
   paymentMethodId?: string // 지출
   active: boolean
+  /** 할부에서 만들어진 항목일 때 회차 정보 (저장하지 않고 계산해서 붙임) */
+  installment?: { no: number; total: number }
+}
+
+/** 할부: 원금(+수수료)을 개월 수로 나눠 매달 지출로 등록 */
+export interface Installment {
+  id: string
+  name: string // 예: 노트북
+  principal: number // 할부 원금
+  months: number // 할부 기간(개월)
+  startMonth: string // 첫 청구월 'YYYY-MM'
+  day: number // 매월 결제일
+  fee?: number // 할부 수수료 총액 (선택)
+  categoryId: string
+  paymentMethodId: string
 }
 
 /** 수입 계획 한 줄 (엑셀 '이번 달 수입 계획') */
@@ -89,5 +104,6 @@ export interface BudgetData {
   plans: Record<string, MonthPlan> // 'YYYY-MM' → 계획
   settings: Settings
   recurring?: RecurringRule[]
+  installments?: Installment[]
   recurringSkips?: Record<string, string[]> // 'YYYY-MM' → 이번 달 건너뛴 반복 항목 id
 }

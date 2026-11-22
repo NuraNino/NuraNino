@@ -17,7 +17,7 @@ export function RecurringDue({ onManage }: { onManage: () => void }) {
   const [amounts, setAmounts] = useState<Record<string, number>>({})
   const pending = items.filter((i) => i.status === 'pending')
 
-  if ((data.recurring ?? []).length === 0) {
+  if ((data.recurring ?? []).length === 0 && (data.installments ?? []).length === 0) {
     return (
       <div className="alert info">
         매달 나가는 고정비(관리비·보험·구독 등)를 반복 항목으로 등록해 두면 한 번에 입력할 수 있습니다.{' '}
@@ -56,7 +56,8 @@ export function RecurringDue({ onManage }: { onManage: () => void }) {
               <span className="tx-body">
                 <span className="tx-memo">{rule.name}</span>
                 <span className="muted small">
-                  {rule.kind === 'income' ? '수입' : `${c?.group ?? ''} · ${c?.name ?? '분류 없음'}`} · {monthsText(rule.months)}
+                  {rule.kind === 'income' ? '수입' : `${c?.group ?? ''} · ${c?.name ?? '분류 없음'}`} ·{' '}
+                  {rule.installment ? '할부' : monthsText(rule.months)}
                 </span>
               </span>
               {status === 'pending' ? (

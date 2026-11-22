@@ -2,6 +2,7 @@ import { useStore } from '../store'
 import { monthSummary, won, carryoverFor } from '../domain/calc'
 import { Bar, Card, Diff, Empty } from '../components'
 import { dueItems } from '../domain/recurring'
+import { InstallmentSummary } from './Installments'
 
 export function Dashboard({ go }: { go: (tab: string) => void }) {
   const { data, month } = useStore()
@@ -81,6 +82,8 @@ export function Dashboard({ go }: { go: (tab: string) => void }) {
           ))}
         </div>
       </Card>
+
+      <InstallmentSummary />
 
       <Card title="예산 초과 항목">
         {overs.length === 0 ? (

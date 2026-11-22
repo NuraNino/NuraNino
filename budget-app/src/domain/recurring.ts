@@ -1,6 +1,7 @@
 import { uid } from './defaults'
 import { categoryMap, incomesOfMonth, txOfMonth } from './calc'
 import type { BudgetData, Group, Income, RecurringRule, Transaction } from './types'
+import { installmentRules } from './installments'
 
 export type DueStatus = 'pending' | 'done' | 'skipped'
 
@@ -26,7 +27,7 @@ export const appliesIn = (rule: RecurringRule, month: string): boolean =>
 
 /** 이번 달 반복 항목과 등록 상태 */
 export function dueItems(data: BudgetData, month: string): DueItem[] {
-  const rules = (data.recurring ?? []).filter((r) => appliesIn(r, month))
+  const rules = [...(data.recurring ?? []).filter((r) => appliesIn(r, month)), ...installmentRules(data, month)]
   const doneIds = new Set([
     ...txOfMonth(data, month).map((t) => t.recurringId),
     ...incomesOfMonth(data, month).map((i) => i.recurringId),
@@ -89,7 +90,7 @@ export function setSkipped(data: BudgetData, month: string, ruleId: string, skip
 /** 그 달에 적용되는 반복 지출의 카테고리별 합계 (예산 채우기용) */
 export function recurringBudget(data: BudgetData, month: string): Map<string, number> {
   const out = new Map<string, number>()
-  for (const r of data.recurring ?? []) {
+  for (const r of [...(data.recurring ?? []), ...installmentRules(data, month)]) {
     if (r.kind !== 'expense' || !r.categoryId || !appliesIn(r, month)) continue
     out.set(r.categoryId, (out.get(r.categoryId) ?? 0) + r.amount)
   }
@@ -111,7 +112,7 @@ export function suggestRules(
   const seen = new Set<string>()
   for (const t of txOfMonth(data, month).sort((a, b) => a.date.localeCompare(b.date))) {
     const g = cats.get(t.categoryId)?.group
-    if (!g || !groups.includes(g) || !t.memo) continue
+    if (!g || !groups.includes(g) || !t.memo || t.recurringId?.startsWith('inst:')) continue
     const key = `expense|${t.memo}|${t.categoryId}`
     if (existing.has(key) || seen.has(key)) continue
     seen.add(key)
