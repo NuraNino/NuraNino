@@ -272,6 +272,12 @@ export function SyncProvider({ children }: { children: ReactNode }) {
           options: { emailRedirectTo: location.origin + location.pathname },
         })
         if (error) throw new Error(authMessage(error.message))
+        // 이미 있는 이메일이면 Supabase는 오류 대신 identities가 빈 사용자를 돌려줌 (메일도 안 감)
+        if (!res.session && res.user && Array.isArray(res.user.identities) && res.user.identities.length === 0) {
+          throw new Error(
+            '이미 가입된 이메일입니다. 로그인 비밀번호로 "로그인"을 누르세요. 예전에 메일 링크로만 가입했다면 비밀번호가 없으니, Supabase 대시보드 Authentication → Users에서 이 사용자를 지운 뒤 다시 가입하세요.',
+          )
+        }
         return res.session ? 'done' : 'confirm'
       },
       async verifyCode(addr, code) {
