@@ -9,7 +9,7 @@ import { recurringBudget } from '../domain/recurring'
 
 /** 예산 화면 표시 순서 (엑셀 지출계획 시트와 같은 흐름) */
 const BUDGET_ORDER: Group[] = ['예비비', '고정비', '저축', '생활비']
-/** 항목명 아래에 세부 내용(예: 경조사 → 부모님 결혼기념일)을 늘 보이게 적는 그룹 (기존 엑셀의 '작은 항목' 칸) */
+/** 항목 옆 칸에 세부 내용(예: 경조사 → 부모님 결혼기념일)을 늘 보이게 적는 그룹 (기존 엑셀의 '작은 항목' 칸) */
 const detailGroup = (g: Group) => g === '예비비'
 /** 항목마다 펼치는 계산란이 있는 그룹 (엑셀의 =117077+20912+… 같은 수식 대신) */
 const calcGroup = (g: Group) => g === '고정비' || g === '저축'
@@ -81,16 +81,18 @@ export function Budget({ go }: { go?: (tab: string) => void }) {
       <Fragment key={id}>
         <tr className={`${c.actual > c.planned ? 'over-row' : ''}${expanded ? ' expanded' : ''}`}>
           {detailGroup(g) ? (
-            <td className="name-detail">
-              <span className="name-detail-label">{c.category.name}</span>
-              <input
-                className="detail-input"
-                value={c.memo ?? ''}
-                placeholder="세부 내용"
-                aria-label={`${c.category.name} 세부 내용`}
-                onChange={(e) => setLine(id, { memo: e.target.value || undefined })}
-              />
-            </td>
+            <>
+              <td className="name-cell">{c.category.name}</td>
+              <td className="detail-cell">
+                <input
+                  className="detail-input"
+                  value={c.memo ?? ''}
+                  placeholder="세부 내용"
+                  aria-label={`${c.category.name} 세부 내용`}
+                  onChange={(e) => setLine(id, { memo: e.target.value || undefined })}
+                />
+              </td>
+            </>
           ) : canExpand ? (
             <td>
               <button
@@ -186,7 +188,7 @@ export function Budget({ go }: { go?: (tab: string) => void }) {
       {[...s.groups]
         .sort((a, b) => BUDGET_ORDER.indexOf(a.group) - BUDGET_ORDER.indexOf(b.group))
         .map((g) => {
-          const cols = detailGroup(g.group) ? 4 : 5
+          const cols = 5
           return (
             <Card
               key={g.group}
@@ -201,7 +203,8 @@ export function Budget({ go }: { go?: (tab: string) => void }) {
                 <table className="table edit">
                   <thead>
                     <tr>
-                      <th>{detailGroup(g.group) ? '항목 · 세부 내용' : '항목'}</th>
+                      <th>항목</th>
+                      {detailGroup(g.group) && <th className="detail-head">세부 내용</th>}
                       <th className="num">계획</th>
                       {!detailGroup(g.group) && <th className="hide-sm">메모</th>}
                       <th className="num">실지출</th>
@@ -212,6 +215,7 @@ export function Budget({ go }: { go?: (tab: string) => void }) {
                   <tfoot>
                     <tr>
                       <td>합계</td>
+                      {detailGroup(g.group) && <td />}
                       <td className="num">{won(g.planned)}</td>
                       {!detailGroup(g.group) && <td className="hide-sm" />}
                       <td className="num">{won(g.actual)}</td>

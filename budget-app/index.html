@@ -3,6 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <script>
+      // iOS 사파리는 글자 16px 미만 입력칸을 누르면 화면을 자동 확대함 → 아이폰·아이패드에서만 막음
+      // (iOS는 maximum-scale 이 있어도 손가락으로 벌려 확대하는 기능은 그대로 둠)
+      ;(function () {
+        var ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+        if (ios) document.querySelector('meta[name=viewport]').setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover')
+      })()
+    </script>
     <meta name="theme-color" content="#5f73d6" />
     <script>
       // 첫 화면 깜빡임 없이 저장된 테마 적용 (src/theme.ts 와 같은 키)
