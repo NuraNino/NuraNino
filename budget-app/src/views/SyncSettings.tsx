@@ -246,7 +246,7 @@ function Connected() {
         </span>
       </p>
       <div className="row-wrap">
-        <button className="btn" disabled={sync.status.syncing} onClick={sync.syncNow}>
+        <button className="btn" disabled={sync.status.syncing} onClick={() => void sync.syncNow()}>
           지금 동기화
         </button>
         <button

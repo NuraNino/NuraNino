@@ -34,7 +34,8 @@ interface SyncApi {
   joinHousehold: (code: string, passphrase: string) => Promise<void>
   unlock: (passphrase: string) => Promise<void>
   createInvite: () => Promise<string>
-  syncNow: () => void
+  /** 지금 동기화. 끝나면 오류 메시지(성공이면 null) */
+  syncNow: () => Promise<string | null>
 }
 
 const Ctx = createContext<SyncApi | null>(null)
@@ -100,6 +101,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const dataRef = useRef(data)
   dataRef.current = data
   const queue = useRef<Promise<void>>(Promise.resolve())
+  const lastErrorRef = useRef<string | null>(null)
 
   // ---------- 로그인 상태 ----------
   useEffect(() => {
@@ -175,9 +177,11 @@ export function SyncProvider({ children }: { children: ReactNode }) {
           if (pulled.length) setData((d) => applyPulled(d, pulled, before))
           commitPulled(st, pulled, cursor)
           saveState(st)
+          lastErrorRef.current = null
           setStatus({ syncing: false, lastSync: Date.now(), error: null })
         } catch (e) {
           saveState(st)
+          lastErrorRef.current = message(e)
           setStatus((s) => ({ ...s, syncing: false, error: message(e) }))
         }
       }),
@@ -351,8 +355,9 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         if (error) throw new Error(error.message)
         return code as string
       },
-      syncNow() {
-        void runSync()
+      async syncNow() {
+        await runSync()
+        return lastErrorRef.current
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
