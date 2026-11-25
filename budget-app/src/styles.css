@@ -1522,9 +1522,9 @@ input[type='date']::-webkit-datetime-edit {
   :root[data-season]:not([data-seasonal='off']) {
     --bg: color-mix(in srgb, var(--season-tint) var(--season-amt), color-mix(in srgb, var(--tint) var(--tint-bg), var(--g-bg)));
   }
-  /* 헤더도 계절 색 쪽으로 살짝 기울인 그라데이션 */
+  /* 헤더 하늘색에도 테마 색을 조금 */
   :root[data-season]:not([data-seasonal='off']) .hero {
-    background: linear-gradient(155deg, var(--hero-bg) 45%, color-mix(in srgb, var(--season-tint) 22%, var(--hero-bg)));
+    background: color-mix(in srgb, var(--season-sky) 88%, var(--primary)) !important;
   }
 }
 
@@ -1667,4 +1667,57 @@ input[type='date']::-webkit-datetime-edit {
   .season .s-scarf,
   .season .s-hatband { fill: color-mix(in srgb, #d2504f 72%, var(--primary)); }
   .season .s-arm { stroke: color-mix(in srgb, #7a4b2a 80%, var(--primary)); }
+}
+
+/* =====================================================================
+ * 계절 풍경 헤더 (SeasonLayer: 헤더 전체를 채우는 일러스트)
+ * ===================================================================== */
+:root[data-season='spring'] { --season-sky: #fde4ec; --season-ink: #5a2a3f; }
+:root[data-season='summer'] { --season-sky: #5ccbe3; --season-ink: #0e3550; }
+:root[data-season='autumn'] { --season-sky: #fbe9d2; --season-ink: #4a2b33; }
+:root[data-season='winter'] { --season-sky: #d3e8f4; --season-ink: #1f2a44; }
+
+.season {
+  inset: 0;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+}
+:root[data-season]:not([data-seasonal='off']) {
+  --hero-ink: var(--season-ink);
+}
+:root[data-season]:not([data-seasonal='off']) .hero {
+  background: var(--season-sky);
+  padding-bottom: 84px;
+}
+:root[data-season]:not([data-seasonal='off']) .hero .brand {
+  opacity: 1;
+}
+:root[data-season]:not([data-seasonal='off']) .hero .sync-badge {
+  background: rgb(255 255 255 / 0.6);
+}
+:root[data-season]:not([data-seasonal='off']) .hero .icon-btn:hover {
+  background: rgb(255 255 255 / 0.4);
+}
+/* 다크 모드: 같은 풍경을 밤처럼 어둡게, 글자는 밝게 */
+@media (prefers-color-scheme: dark) {
+  :root[data-season]:not([data-seasonal='off']):not([data-mode='light']) {
+    --hero-ink: #f1eff6;
+  }
+  :root:not([data-mode='light']) .season {
+    filter: brightness(0.55) saturate(0.85);
+  }
+  :root[data-season]:not([data-seasonal='off']):not([data-mode='light']) .hero .sync-badge {
+    background: rgb(0 0 0 / 0.3);
+  }
+}
+:root[data-season]:not([data-seasonal='off'])[data-mode='dark'] {
+  --hero-ink: #f1eff6;
+}
+:root[data-mode='dark'] .season {
+  filter: brightness(0.55) saturate(0.85);
+}
+:root[data-season]:not([data-seasonal='off'])[data-mode='dark'] .hero .sync-badge {
+  background: rgb(0 0 0 / 0.3);
 }

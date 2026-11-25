@@ -55,9 +55,6 @@ export function App() {
     <div className="app">
       <header className="hero">
         <SeasonLayer season={seasonOf(month)} />
-        <span className="deco deco-1" aria-hidden />
-        <span className="deco deco-2" aria-hidden />
-        <span className="deco deco-3" aria-hidden />
         <div className="hero-top">
           <div className="brand-wrap">
             <span className="brand">우리집 가계부</span>

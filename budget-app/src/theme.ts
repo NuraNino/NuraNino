@@ -55,11 +55,7 @@ export function applyTheme(t: Theme) {
   else root.setAttribute('data-mode', t.mode)
   root.setAttribute('data-accent', t.accent)
   root.setAttribute('data-seasonal', t.seasonal ? 'on' : 'off')
-  // 상태 표시줄 색을 현재 배경색과 맞춤 (styles.css 의 --bg 계산과 같은 값)
-  const dark = t.mode === 'dark' || (t.mode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
-  const a = ACCENTS.find((x) => x.id === t.accent) ?? ACCENTS[0]
-  const bg = dark ? mix(a.dark, '#13141b', 0.38) : a.light
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', bg)
+  updateStatusBar(t)
 }
 
 /** hex 두 색을 ratio 비율로 섞음 (CSS color-mix in srgb 와 동일) */
@@ -80,6 +76,26 @@ export function seasonOf(month: string): Season {
 }
 
 /** 보고 있는 달의 계절을 문서에 표시 (CSS가 배경·장식을 바꿈) */
+let currentSeason: Season = 'autumn'
 export function applySeason(month: string) {
-  document.documentElement.setAttribute('data-season', seasonOf(month))
+  currentSeason = seasonOf(month)
+  document.documentElement.setAttribute('data-season', currentSeason)
+  updateStatusBar(loadTheme())
+}
+
+/** 계절 풍경 하늘색 (styles.css 의 --season-sky 와 같은 값) */
+const SEASON_SKY: Record<Season, string> = { spring: '#fde4ec', summer: '#5ccbe3', autumn: '#fbe9d2', winter: '#d3e8f4' }
+
+/** 휴대폰 상단 상태 표시줄 색을 헤더 색과 맞춤 */
+function updateStatusBar(t: Theme) {
+  const dark = t.mode === 'dark' || (t.mode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+  const a = ACCENTS.find((x) => x.id === t.accent) ?? ACCENTS[0]
+  let color: string
+  if (t.seasonal) {
+    const sky = mix(a.light, SEASON_SKY[currentSeason], 0.12)
+    color = dark ? mix('#000000', sky, 0.58) : sky
+  } else {
+    color = dark ? mix(a.dark, '#13141b', 0.38) : a.light
+  }
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color)
 }
