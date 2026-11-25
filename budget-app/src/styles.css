@@ -1891,13 +1891,24 @@ body {
   border-bottom: 1px dashed var(--border);
 }
 
-/* ---------- 입력창 누르면 확대되는 문제 (iOS 사파리는 16px 미만 입력창을 자동 확대) ---------- */
-@media (hover: none), (pointer: coarse), (max-width: 760px) {
-  input:not([type='checkbox']):not([type='radio']):not([type='file']),
-  select,
-  textarea {
-    font-size: 16px !important;
-  }
+/* ---------- 입력칸 글자 크기 ----------
+ * 예산 표 항목(14px, 휴대폰 13px)과 맞춤. iOS 사파리의 "입력할 때 자동 확대"는
+ * 글자를 16px로 키우는 대신 index.html 에서 아이폰에만 viewport maximum-scale=1 로 막음
+ * (아이폰은 그래도 손가락으로 벌려 확대 가능).
+ */
+input:not([type='checkbox']):not([type='radio']):not([type='file']),
+select,
+textarea {
+  font-size: 14px;
+}
+.form label > input,
+.form label > select {
+  font-size: 14px;
+}
+/* 표 안 입력칸은 표 글자 크기(14px, 휴대폰 13px)를 그대로 따름 */
+.table.edit input:not([type='checkbox']):not([type='radio']),
+.table.edit select {
+  font-size: inherit;
 }
 
 /* 예산: 예비비 항목 | 세부 내용 | 계획 … 한 줄에 나란히, 세로 가운데 정렬 */
