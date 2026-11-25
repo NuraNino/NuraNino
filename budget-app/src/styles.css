@@ -1835,3 +1835,67 @@ body {
     animation-duration: 2s;
   }
 }
+
+/* ---------- 헌금 계산 ---------- */
+.offering {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.offering-head {
+  margin: 6px 0 0;
+  font-size: 14px;
+}
+.member {
+  background: var(--surface-2);
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.member-base {
+  margin: 0;
+}
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+.line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 128px auto;
+  gap: 6px;
+  align-items: center;
+  width: 100%;
+}
+.line input {
+  padding: 7px 9px !important;
+}
+.subtotal-row {
+  font-size: 14px;
+  padding: 4px 2px;
+  border-top: 1px dashed var(--border);
+}
+.total-row {
+  font-size: 16px;
+  padding: 8px 2px 2px;
+  border-top: 2px solid var(--border);
+}
+.member-setting {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+/* ---------- 입력창 누르면 확대되는 문제 (iOS 사파리는 16px 미만 입력창을 자동 확대) ---------- */
+@media (hover: none), (pointer: coarse), (max-width: 760px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='file']),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}

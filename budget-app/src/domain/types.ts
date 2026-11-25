@@ -81,14 +81,38 @@ export interface MonthPlan {
   budgets: Record<string, BudgetLine> // categoryId → 예산
   incomePlan: IncomePlanItem[]
   notes?: string // 피드백 메모
+  /** 이 달의 헌금 계산 */
+  offering?: {
+    /** 사람별로 직접 더하는 십일조 대상 수입 (실 수입에 없는 수금액 등) */
+    extraBase: Record<string, AmountLine[]>
+    /** 기타 헌금. 없으면 설정의 기본 목록을 사용 */
+    others?: AmountLine[]
+  }
+}
+
+/** 십일조를 따로 계산하는 사람 (예: 남편, 아내) */
+export interface TitheMember {
+  id: string
+  name: string
+  sources: string[] // 이 사람의 십일조 대상 수입 내용(source) 이름
+}
+
+/** 금액 한 줄 (기타 헌금, 직접 넣는 대상 수입 등) */
+export interface AmountLine {
+  id: string
+  label: string
+  amount: number
 }
 
 export interface TitheSettings {
   enabled: boolean
   rate: number // 0.1 = 10%
-  sources: string[] // 십일조 대상 수입 내용(source) 이름
-  extra: number // 선교헌금 등 고정 추가액
-  categoryId?: string // 헌금 카테고리
+  sources: string[] // (이전 버전) 십일조 대상 수입 — members가 없을 때 첫 사람의 대상으로 사용
+  extra: number // (이전 버전) 선교헌금 등 고정 추가액 — defaultOfferings가 없을 때 기타 헌금 기본값으로 사용
+  categoryId?: string // 헌금 카테고리 (총 헌금이 들어가는 예산 항목)
+  members?: TitheMember[]
+  /** 달마다 기본으로 채워지는 기타 헌금 (감사헌금, 선교헌금 …) */
+  defaultOfferings?: AmountLine[]
 }
 
 export interface Settings {

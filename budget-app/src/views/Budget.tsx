@@ -1,5 +1,6 @@
 import { useStore } from '../store'
-import { addMonths, monthLabel, monthSummary, planOf, titheFor, won } from '../domain/calc'
+import { addMonths, monthLabel, monthSummary, planOf, won } from '../domain/calc'
+import { OfferingCard } from './Offering'
 import { Card, Diff, MoneyInput } from '../components'
 import type { BudgetLine, Group } from '../domain/types'
 
@@ -7,14 +8,12 @@ import type { BudgetLine, Group } from '../domain/types'
 const BUDGET_ORDER: Group[] = ['예비비', '고정비', '저축', '생활비']
 import { recurringBudget } from '../domain/recurring'
 
-export function Budget() {
+export function Budget({ go }: { go?: (tab: string) => void }) {
   const { data, month, updatePlan } = useStore()
   const s = monthSummary(data, month)
   const plan = planOf(data, month)
   const prev = addMonths(month, -1)
   const prevPlan = data.plans[prev]
-  const tithe = titheFor(data, month)
-  const titheCat = data.categories.find((c) => c.id === data.settings.tithe.categoryId)
 
   const rec = recurringBudget(data, month)
   const recDiffers = [...rec].filter(([id, amt]) => (plan.budgets[id]?.amount ?? 0) !== amt)
@@ -72,22 +71,7 @@ export function Budget() {
         )}
       </div>
 
-      {data.settings.tithe.enabled && titheCat && (
-        <Card title="십일조 계산">
-          <p className="small">
-            대상 수입 {won(tithe.base)} × {Math.round(data.settings.tithe.rate * 100)}%
-            {data.settings.tithe.extra ? ` + 추가 ${won(data.settings.tithe.extra)}` : ''} ={' '}
-            <strong>{won(tithe.amount)}</strong>
-            {data.settings.tithe.sources.length === 0 && <span className="muted"> (설정에서 대상 수입을 지정하세요)</span>}
-          </p>
-          <div className="row-end">
-            <span className="muted small">현재 {titheCat.name} 예산 {won(plan.budgets[titheCat.id]?.amount ?? 0)}</span>
-            <button className="btn small" onClick={() => setLine(titheCat.id, { amount: tithe.amount })} disabled={!tithe.amount}>
-              {titheCat.name} 예산에 적용
-            </button>
-          </div>
-        </Card>
-      )}
+      <OfferingCard go={go} />
 
       {[...s.groups].sort((a, b) => BUDGET_ORDER.indexOf(a.group) - BUDGET_ORDER.indexOf(b.group)).map((g) => (
         <Card

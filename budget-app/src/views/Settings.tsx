@@ -3,7 +3,8 @@ import { isBudgetData, useStore } from '../store'
 import { applyImport, parseWorkbook, type ImportStats, type ParsedWorkbook, type Workbook } from '../domain/importExcel'
 import { createDefaultData, uid } from '../domain/defaults'
 import { monthLabel, todayISO } from '../domain/calc'
-import { GROUPS, type Group } from '../domain/types'
+import { GROUPS, type Group, type TitheMember } from '../domain/types'
+import { defaultOfferings, titheMembers } from '../domain/offering'
 import { Card, MoneyInput } from '../components'
 import { RecurringSettings } from './Recurring'
 import { InstallmentSettings } from './Installments'
@@ -299,25 +300,32 @@ function PaymentMethods() {
 function TitheSettings() {
   const { data, setData } = useStore()
   const t = data.settings.tithe
+  const members = titheMembers(data)
+  const offerings = defaultOfferings(data)
   const set = (patch: Partial<typeof t>) =>
     setData((d) => ({ ...d, settings: { ...d.settings, tithe: { ...d.settings.tithe, ...patch } } }))
+  const setMembers = (fn: (ms: TitheMember[]) => TitheMember[]) => set({ members: fn(members) })
   const sources = [
-    ...new Set([...data.incomes.map((i) => i.source), ...Object.values(data.plans).flatMap((p) => p.incomePlan.map((i) => i.source)), ...t.sources]),
+    ...new Set([
+      ...data.incomes.map((i) => i.source),
+      ...Object.values(data.plans).flatMap((p) => p.incomePlan.map((i) => i.source)),
+      ...members.flatMap((m) => m.sources),
+    ]),
   ]
     .filter((s) => s && s !== '이월금')
     .sort()
 
   return (
-    <Card title="십일조 계산 규칙">
+    <Card title="헌금 계산 규칙">
       <label className="check">
         <input type="checkbox" checked={t.enabled} onChange={(e) => set({ enabled: e.target.checked })} />
-        예산 화면에 십일조 계산 표시
+        예산 화면에 헌금 계산 표시
       </label>
       {t.enabled && (
         <div className="form">
-          <div className="grid3">
+          <div className="grid2">
             <label>
-              비율 (%)
+              십일조 비율 (%)
               <input
                 type="number"
                 min={0}
@@ -328,11 +336,7 @@ function TitheSettings() {
               />
             </label>
             <label>
-              고정 추가액 (선교헌금 등)
-              <MoneyInput value={t.extra || null} onChange={(v) => set({ extra: v ?? 0 })} ariaLabel="고정 추가액" />
-            </label>
-            <label>
-              적용할 항목
+              총 헌금이 들어갈 예산 항목
               <select value={t.categoryId ?? ''} onChange={(e) => set({ categoryId: e.target.value || undefined })}>
                 <option value="">선택</option>
                 {data.categories
@@ -345,24 +349,82 @@ function TitheSettings() {
               </select>
             </label>
           </div>
+
           <fieldset>
-            <legend className="small">대상 수입 (실 수입 내역의 '내용' 기준)</legend>
-            {sources.length === 0 ? (
-              <p className="small muted">수입을 먼저 입력하면 여기에서 고를 수 있습니다.</p>
-            ) : (
-              <div className="row-wrap">
-                {sources.map((s) => (
-                  <label key={s} className="check chip">
-                    <input
-                      type="checkbox"
-                      checked={t.sources.includes(s)}
-                      onChange={(e) => set({ sources: e.target.checked ? [...t.sources, s] : t.sources.filter((x) => x !== s) })}
-                    />
-                    {s}
-                  </label>
-                ))}
+            <legend className="small">십일조 — 사람별 대상 수입 (실 수입 내역의 '내용' 기준)</legend>
+            {members.map((m) => (
+              <div key={m.id} className="member-setting">
+                <div className="cat-item">
+                  <input
+                    value={m.name}
+                    aria-label="이름"
+                    onChange={(e) => setMembers((ms) => ms.map((x) => (x.id === m.id ? { ...x, name: e.target.value } : x)))}
+                  />
+                  {members.length > 1 && (
+                    <button
+                      className="btn small ghost"
+                      onClick={() => confirm(`'${m.name}'을(를) 십일조 계산에서 뺄까요?`) && setMembers((ms) => ms.filter((x) => x.id !== m.id))}
+                    >
+                      빼기
+                    </button>
+                  )}
+                </div>
+                {sources.length === 0 ? (
+                  <p className="small muted">수입을 먼저 입력하면 여기에서 고를 수 있습니다.</p>
+                ) : (
+                  <div className="row-wrap">
+                    {sources.map((src) => (
+                      <label key={src} className="check chip">
+                        <input
+                          type="checkbox"
+                          checked={m.sources.includes(src)}
+                          onChange={(e) =>
+                            setMembers((ms) =>
+                              ms.map((x) =>
+                                x.id === m.id
+                                  ? { ...x, sources: e.target.checked ? [...x.sources, src] : x.sources.filter((y) => y !== src) }
+                                  : x,
+                              ),
+                            )
+                          }
+                        />
+                        {src}
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
+            ))}
+            <button className="link small" onClick={() => setMembers((ms) => [...ms, { id: uid(), name: '', sources: [] }])}>
+              + 사람 추가
+            </button>
+          </fieldset>
+
+          <fieldset>
+            <legend className="small">기타 헌금 기본 목록 — 달마다 기본으로 채워짐 (공동)</legend>
+            <div className="lines">
+              {offerings.map((o) => (
+                <div key={o.id} className="line">
+                  <input
+                    value={o.label}
+                    placeholder="예: 선교헌금"
+                    aria-label="헌금 이름"
+                    onChange={(e) => set({ defaultOfferings: offerings.map((x) => (x.id === o.id ? { ...x, label: e.target.value } : x)) })}
+                  />
+                  <MoneyInput
+                    value={o.amount || null}
+                    ariaLabel={`${o.label || '헌금'} 기본 금액`}
+                    onChange={(v) => set({ defaultOfferings: offerings.map((x) => (x.id === o.id ? { ...x, amount: v ?? 0 } : x)) })}
+                  />
+                  <button className="icon-btn" aria-label="삭제" onClick={() => set({ defaultOfferings: offerings.filter((x) => x.id !== o.id) })}>
+                    ×
+                  </button>
+                </div>
+              ))}
+              <button className="link small" onClick={() => set({ defaultOfferings: [...offerings, { id: uid(), label: '', amount: 0 }] })}>
+                + 헌금 추가
+              </button>
+            </div>
           </fieldset>
         </div>
       )}
