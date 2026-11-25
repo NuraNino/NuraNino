@@ -4,6 +4,7 @@ import { clearInvite, pendingInvite, useSync } from '../sync/SyncProvider'
 import { Card } from '../components'
 
 const MIN_PASS = 8
+const OTP_ENABLED = import.meta.env.VITE_SUPABASE_OTP === '1'
 
 function useAction() {
   const [busy, setBusy] = useState(false)
@@ -36,14 +37,18 @@ function SignIn() {
   return (
     <div className="form">
       <p className="small muted">두 분이 같은 가계부를 함께 쓰려면 각자 이메일로 로그인하세요.</p>
-      <div className="seg two" role="radiogroup" aria-label="로그인 방법">
-        <button type="button" role="radio" aria-checked={mode === 'password'} className={mode === 'password' ? 'on' : ''} onClick={() => setMode('password')}>
-          이메일 + 비밀번호
-        </button>
-        <button type="button" role="radio" aria-checked={mode === 'code'} className={mode === 'code' ? 'on' : ''} onClick={() => setMode('code')}>
-          메일 코드
-        </button>
-      </div>
+      {/* 메일 코드 로그인은 Supabase 메일 양식에 {{ .Token }}을 넣은 경우(직접 SMTP 연결 필요)에만 동작하므로
+          VITE_SUPABASE_OTP=1 로 빌드했을 때만 보여 줍니다. */}
+      {OTP_ENABLED && (
+        <div className="seg two" role="radiogroup" aria-label="로그인 방법">
+          <button type="button" role="radio" aria-checked={mode === 'password'} className={mode === 'password' ? 'on' : ''} onClick={() => setMode('password')}>
+            이메일 + 비밀번호
+          </button>
+          <button type="button" role="radio" aria-checked={mode === 'code'} className={mode === 'code' ? 'on' : ''} onClick={() => setMode('code')}>
+            메일 코드
+          </button>
+        </div>
+      )}
       <label>
         이메일
         <input type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
