@@ -68,12 +68,18 @@ const message = (e: unknown) => {
   return m
 }
 
-function authMessage(m: string): string {
+function authMessage(m: string, code?: string): string {
   if (/invalid login credentials/i.test(m)) return '이메일 또는 로그인 비밀번호가 맞지 않습니다. 처음이라면 "처음 가입"을 누르세요.'
   if (/email not confirmed/i.test(m)) return '메일 인증이 아직 안 됐습니다. 받은 메일의 인증 링크를 누른 뒤 다시 로그인하세요.'
   if (/already registered|already exists/i.test(m)) return '이미 가입된 이메일입니다. "로그인"을 누르세요.'
   if (/password should be|weak password|at least/i.test(m)) return '로그인 비밀번호가 너무 짧거나 쉽습니다. 8자 이상으로 정하세요.'
-  if (/rate limit|too many/i.test(m)) return '요청이 너무 많습니다. 잠시 후 다시 시도하세요.'
+  const wait = m.match(/after (\d+) seconds?/i)
+  if (wait) return `같은 요청을 너무 빨리 반복했습니다. ${wait[1]}초 뒤에 다시 시도하세요.`
+  if (code === 'over_email_send_rate_limit' || /email rate limit/i.test(m))
+    return '인증 메일 발송 한도를 넘었습니다(무료 플랜은 시간당 몇 통). 1시간쯤 뒤에 다시 하거나, Supabase 대시보드 Authentication → Users → Add user에서 "Auto Confirm User"로 계정을 만든 뒤 로그인하세요.'
+  if (code === 'over_request_rate_limit' || /request rate limit|too many requests/i.test(m))
+    return '로그인 시도가 너무 잦습니다. 몇 분 뒤에 다시 시도하세요.'
+  if (/rate limit/i.test(m)) return '요청이 너무 많습니다. 잠시 후 다시 시도하세요.'
   return m
 }
 
@@ -259,11 +265,11 @@ export function SyncProvider({ children }: { children: ReactNode }) {
           email: addr,
           options: { emailRedirectTo: location.origin + location.pathname, shouldCreateUser: true },
         })
-        if (error) throw new Error(error.message)
+        if (error) throw new Error(authMessage(error.message, error.code))
       },
       async signInPassword(addr, password) {
         const { error } = await requireClient().auth.signInWithPassword({ email: addr, password })
-        if (error) throw new Error(authMessage(error.message))
+        if (error) throw new Error(authMessage(error.message, error.code))
       },
       async signUpPassword(addr, password) {
         const { data: res, error } = await requireClient().auth.signUp({
@@ -271,7 +277,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
           password,
           options: { emailRedirectTo: location.origin + location.pathname },
         })
-        if (error) throw new Error(authMessage(error.message))
+        if (error) throw new Error(authMessage(error.message, error.code))
         // 이미 있는 이메일이면 Supabase는 오류 대신 identities가 빈 사용자를 돌려줌 (메일도 안 감)
         if (!res.session && res.user && Array.isArray(res.user.identities) && res.user.identities.length === 0) {
           throw new Error(
@@ -282,7 +288,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       },
       async verifyCode(addr, code) {
         const { error } = await requireClient().auth.verifyOtp({ email: addr, token: code.trim(), type: 'email' })
-        if (error) throw new Error('코드가 맞지 않거나 만료되었습니다.')
+        if (error) throw new Error(/rate limit|after \d+ seconds/i.test(error.message) ? authMessage(error.message, error.code) : '코드가 맞지 않거나 만료되었습니다.')
       },
       async signOut() {
         await requireClient().auth.signOut()

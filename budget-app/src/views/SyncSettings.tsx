@@ -270,7 +270,7 @@ function Connected() {
             className="btn small"
             onClick={async () => {
               try {
-                if (navigator.share) await navigator.share({ title: '가계부 초대', url: link })
+                if (navigator.share) await navigator.share({ title: '메덩파카 가계부 초대', url: link })
                 else {
                   await navigator.clipboard.writeText(link)
                   setCopied(true)
