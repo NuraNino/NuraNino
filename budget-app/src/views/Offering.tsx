@@ -1,12 +1,12 @@
 import { useStore } from '../store'
-import { addMonths, emptyPlan, monthLabel, planOf, won } from '../domain/calc'
+import { addMonths, emptyPlan, monthLabel, won } from '../domain/calc'
 import { uid } from '../domain/defaults'
 import { offeringFor } from '../domain/offering'
 import type { AmountLine, MonthPlan } from '../domain/types'
-import { Card, MoneyInput } from '../components'
+import { MoneyInput } from '../components'
 
 /** 금액 줄 목록 편집 (내용 + 금액 + 삭제, 아래에 줄 추가) */
-function LineList({
+export function LineList({
   lines,
   onChange,
   placeholder,
@@ -44,16 +44,10 @@ function LineList({
   )
 }
 
-/** 예산 화면: 헌금 계산 (사람별 십일조 + 공동 기타 헌금 → 헌금 예산) */
-export function OfferingCard({ go }: { go?: (tab: string) => void }) {
+/** 예산 표의 헌금 줄을 펼쳤을 때: 사람별 십일조 + 공동 기타 헌금 (합계가 헌금 예산이 됨) */
+export function OfferingPanel({ go }: { go?: (tab: string) => void }) {
   const { data, month, updatePlan } = useStore()
-  const t = data.settings.tithe
-  const cat = data.categories.find((c) => c.id === t.categoryId)
-  if (!t.enabled || !cat) return null
-
   const r = offeringFor(data, month)
-  const plan = planOf(data, month)
-  const budget = plan.budgets[cat.id]?.amount ?? 0
   const prevOthers = data.plans[addMonths(month, -1)]?.offering?.others
   const pct = Math.round(r.rate * 1000) / 10
 
@@ -61,77 +55,61 @@ export function OfferingCard({ go }: { go?: (tab: string) => void }) {
     updatePlan(month, (p) => ({ ...(p ?? emptyPlan()), offering: fn(p.offering ?? { extraBase: {} }) }))
 
   return (
-    <Card title="헌금 계산" actions={<strong className="small">{won(r.total)}</strong>}>
-      <div className="offering">
-        <h3 className="offering-head">
-          십일조 <span className="muted small">대상 수입 × {pct}%</span>
-        </h3>
-        {r.members.map((m) => (
-          <div key={m.member.id} className="member">
-            <div className="row-between">
-              <strong>{m.member.name}</strong>
-              <strong>{won(m.tithe)}</strong>
-            </div>
-            <p className="small muted member-base">
-              실 수입 {m.member.sources.length ? m.member.sources.join(', ') : '(대상 없음)'} {won(m.incomeBase)}
-              {m.extraLines.length > 0 && ` + 직접 ${won(m.base - m.incomeBase)}`} = 대상 {won(m.base)}
-            </p>
-            <LineList
-              lines={m.extraLines}
-              placeholder="예: 세종 수금"
-              addLabel="대상 수입 직접 추가"
-              onChange={(lines) => setOffering((o) => ({ ...o, extraBase: { ...o.extraBase, [m.member.id]: lines } }))}
-            />
+    <div className="offering">
+      <h3 className="offering-head">
+        십일조 <span className="muted small">대상 수입 × {pct}%</span>
+      </h3>
+      {r.members.map((m) => (
+        <div key={m.member.id} className="member">
+          <div className="row-between">
+            <strong>{m.member.name || '이름 없음'}</strong>
+            <strong>{won(m.tithe)}</strong>
           </div>
-        ))}
-        <div className="row-between subtotal-row">
-          <span>십일조 합계</span>
-          <strong>{won(r.titheTotal)}</strong>
-        </div>
-
-        <h3 className="offering-head">
-          기타 헌금 <span className="muted small">공동</span>
-        </h3>
-        {r.othersAreDefault && r.others.length > 0 && <p className="small muted">설정의 기본 목록입니다. 고치면 이번 달에만 적용됩니다.</p>}
-        <LineList
-          lines={r.others}
-          placeholder="예: 감사헌금"
-          addLabel="헌금 추가"
-          onChange={(lines) => setOffering((o) => ({ ...o, others: lines }))}
-        />
-        {r.othersAreDefault && prevOthers && prevOthers.length > 0 && (
-          <button className="link small" onClick={() => setOffering((o) => ({ ...o, others: prevOthers.map((x) => ({ ...x, id: uid() })) }))}>
-            {monthLabel(addMonths(month, -1))} 기타 헌금 불러오기
-          </button>
-        )}
-        <div className="row-between subtotal-row">
-          <span>기타 헌금 합계</span>
-          <strong>{won(r.othersTotal)}</strong>
-        </div>
-
-        <div className="row-between total-row">
-          <span>총 헌금</span>
-          <strong>{won(r.total)}</strong>
-        </div>
-        <div className="row-end">
-          <span className={`small ${budget === r.total ? 'pos' : 'muted'}`}>
-            {cat.name} 예산 {won(budget)}
-            {budget === r.total ? ' ✓' : ''}
-          </span>
-          <button className="btn small primary" disabled={budget === r.total} onClick={() => updatePlan(month, (p) => ({ ...p, budgets: { ...p.budgets, [cat.id]: { ...(p.budgets[cat.id] ?? {}), amount: r.total } } }))}>
-            {cat.name} 예산에 적용
-          </button>
-        </div>
-        {go && (
-          <p className="small muted">
-            사람·대상 수입·기본 헌금 목록은{' '}
-            <button className="link small" onClick={() => go('settings')}>
-              설정 → 헌금 계산 규칙
-            </button>
-            에서 바꿉니다.
+          <p className="small muted member-base">
+            {m.member.sources.length ? m.member.sources.join(', ') : '대상 수입 없음'} {won(m.incomeBase)}
+            {m.fromPlan.length > 0 && ` (아직 실 수입이 없어 ${m.fromPlan.join(', ')}은 수입 계획 금액)`}
+            {m.extraLines.length > 0 && ` + 직접 ${won(m.base - m.incomeBase)}`} = 대상 {won(m.base)}
           </p>
-        )}
+          <LineList
+            lines={m.extraLines}
+            placeholder="예: 세종 수금"
+            addLabel="대상 수입 직접 추가"
+            onChange={(lines) => setOffering((o) => ({ ...o, extraBase: { ...o.extraBase, [m.member.id]: lines } }))}
+          />
+        </div>
+      ))}
+      <div className="row-between subtotal-row">
+        <span>십일조 합계</span>
+        <strong>{won(r.titheTotal)}</strong>
       </div>
-    </Card>
+
+      <h3 className="offering-head">
+        기타 헌금 <span className="muted small">공동</span>
+      </h3>
+      {r.othersAreDefault && r.others.length > 0 && <p className="small muted">설정의 기본 목록입니다. 고치면 이번 달에만 적용됩니다.</p>}
+      <LineList lines={r.others} placeholder="예: 감사헌금" addLabel="헌금 추가" onChange={(lines) => setOffering((o) => ({ ...o, others: lines }))} />
+      {r.othersAreDefault && prevOthers && prevOthers.length > 0 && (
+        <button className="link small" onClick={() => setOffering((o) => ({ ...o, others: prevOthers.map((x) => ({ ...x, id: uid() })) }))}>
+          {monthLabel(addMonths(month, -1))} 기타 헌금 불러오기
+        </button>
+      )}
+      <div className="row-between subtotal-row">
+        <span>기타 헌금 합계</span>
+        <strong>{won(r.othersTotal)}</strong>
+      </div>
+      <div className="row-between total-row">
+        <span>총 헌금 = 예산</span>
+        <strong>{won(r.total)}</strong>
+      </div>
+      {go && (
+        <p className="small muted">
+          사람·대상 수입·기본 헌금 목록은{' '}
+          <button className="link small" onClick={() => go('settings')}>
+            설정 → 헌금 계산 규칙
+          </button>
+          에서 바꿉니다.
+        </p>
+      )}
+    </div>
   )
 }

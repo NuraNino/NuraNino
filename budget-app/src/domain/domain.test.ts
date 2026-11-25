@@ -97,9 +97,10 @@ describe('엑셀 가져오기', () => {
     const s = monthSummary(data, '2026-11')
     expect(s.incomePlanned).toBe(3050000)
     expect(s.incomeActual).toBe(3070130)
-    expect(s.expensePlanned).toBe(100000 + 360000 + 600000 + 300000)
+    // 헌금 예산은 헌금 계산(월급 3,000,000 × 10%)으로 자동
+    expect(s.expensePlanned).toBe(100000 + 360000 + 600000 + 300000 + 300000)
     expect(s.expenseActual).toBe(395907 + 28690 + 100000 + 343690)
-    expect(s.planGap).toBe(3050000 - 1360000)
+    expect(s.planGap).toBe(3050000 - 1660000)
     // 남은 고정비·저축: 관리비 16,310 + 적금 600,000 (헌금은 예산 0이라 음수 → 0)
     expect(s.remainingFixed).toBe(16310 + 600000)
     expect(s.projected).toBe(s.net - s.remainingFixed)

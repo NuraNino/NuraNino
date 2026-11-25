@@ -5,7 +5,7 @@
  * 복원용 시트("_백업데이터": 전체 데이터를 JSON으로 나눠 담음)를 함께 만듭니다.
  * 복원할 때는 "_백업데이터" 시트만 읽으므로, 보기용 시트를 고쳐도 복원 결과는 바뀌지 않습니다.
  */
-import { categoryMap, monthLabel, monthOf, monthSummary, weekOfMonth } from './calc'
+import { categoryMap, monthLabel, monthOf, monthSummary, plannedAmount, weekOfMonth } from './calc'
 import { GROUPS, type BudgetData } from './types'
 import type { Workbook } from './importExcel'
 
@@ -113,7 +113,9 @@ export function buildBackupSheets(data: BudgetData, now = new Date()): SheetSpec
     for (const g of GROUPS) {
       for (const c of data.categories.filter((x) => x.group === g)) {
         const b = p.budgets[c.id]
-        if (b && (b.amount || b.memo)) budgetRows.push([monthLabel(m), g, c.name, money(b.amount), b.memo ?? ''])
+        const amount = plannedAmount(data, m, c.id)
+        const calc = b?.calc?.length ? b.calc.map((l) => `${l.label} ${l.amount.toLocaleString('ko-KR')}`).join(' + ') : ''
+        if (amount || b?.memo || calc) budgetRows.push([monthLabel(m), g, c.name, money(amount), b?.memo ?? '', calc])
       }
     }
     for (const i of p.incomePlan) planRows.push([monthLabel(m), i.kind, i.source, money(i.amount)])
@@ -121,8 +123,8 @@ export function buildBackupSheets(data: BudgetData, now = new Date()): SheetSpec
   const budget: SheetSpec = {
     sheet: '예산',
     stickyRowsCount: 1,
-    columns: [{ width: 12 }, { width: 9 }, { width: 11 }, { width: 14 }, { width: 30 }],
-    data: [head(['월', '큰 항목', '작은 항목', '계획 금액', '메모']), ...budgetRows],
+    columns: [{ width: 12 }, { width: 9 }, { width: 11 }, { width: 14 }, { width: 24 }, { width: 50 }],
+    data: [head(['월', '큰 항목', '작은 항목', '계획 금액', '메모·세부 내용', '계산 내역']), ...budgetRows],
   }
   const incomePlan: SheetSpec = {
     sheet: '수입 계획',

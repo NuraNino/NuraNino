@@ -1,4 +1,5 @@
 import { GROUPS, type BudgetData, type Category, type Group, type MonthPlan, type Transaction } from './types'
+import { offeringFor } from './offering'
 
 export const monthOf = (date: string): string => date.slice(0, 7)
 
@@ -37,6 +38,20 @@ export const incomesOfMonth = (data: BudgetData, month: string) =>
 
 export function categoryMap(data: BudgetData): Map<string, Category> {
   return new Map(data.categories.map((c) => [c.id, c]))
+}
+
+/** 헌금 예산을 헌금 계산 합계로 자동으로 맞추는지 (설정의 헌금 계산이 켜져 있고 그 항목일 때) */
+export function offeringDrivesBudget(data: BudgetData, _month: string, categoryId: string): boolean {
+  const t = data.settings.tithe
+  return t.enabled && t.categoryId === categoryId
+}
+
+/** 항목의 예산 금액: 헌금 계산 합계 → 계산란 합계 → 직접 입력한 금액 순 */
+export function plannedAmount(data: BudgetData, month: string, categoryId: string): number {
+  if (offeringDrivesBudget(data, month, categoryId)) return offeringFor(data, month).total
+  const line = planOf(data, month).budgets[categoryId]
+  if (line?.calc?.length) return sum(line.calc.map((l) => l.amount))
+  return line?.amount ?? 0
 }
 
 export interface CategoryRow {
@@ -81,7 +96,7 @@ export function monthSummary(data: BudgetData, month: string): MonthSummary {
     const categories: CategoryRow[] = data.categories
       .filter((c) => c.group === group)
       .map((category) => {
-        const planned = plan.budgets[category.id]?.amount ?? 0
+        const planned = plannedAmount(data, month, category.id)
         const actual = actualByCat.get(category.id) ?? 0
         return { category, planned, actual, diff: planned - actual, memo: plan.budgets[category.id]?.memo }
       })
