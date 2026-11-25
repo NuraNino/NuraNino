@@ -25,6 +25,10 @@ interface SyncApi {
   notice: string
   sendLink: (email: string) => Promise<void>
   verifyCode: (email: string, code: string) => Promise<void>
+  /** 이메일+비밀번호 로그인 (메일 양식 수정·SMTP 없이 사용 가능) */
+  signInPassword: (email: string, password: string) => Promise<void>
+  /** 가입. 메일 인증이 켜져 있으면 'confirm'(메일의 링크를 눌러야 함) */
+  signUpPassword: (email: string, password: string) => Promise<'done' | 'confirm'>
   signOut: () => Promise<void>
   createHousehold: (passphrase: string) => Promise<void>
   joinHousehold: (code: string, passphrase: string) => Promise<void>
@@ -61,6 +65,15 @@ const message = (e: unknown) => {
   if (/invalid or expired invite/.test(m)) return '초대 코드가 잘못되었거나 만료(3일)·사용되었습니다.'
   if (/Failed to fetch|NetworkError|network/i.test(m)) return '인터넷에 연결되어 있지 않습니다. 연결되면 자동으로 다시 시도합니다.'
   if (/OperationError|decrypt/i.test(m)) return '복호화에 실패했습니다. 가계부 비밀번호가 다른 기기와 같은지 확인하세요.'
+  return m
+}
+
+function authMessage(m: string): string {
+  if (/invalid login credentials/i.test(m)) return '이메일 또는 로그인 비밀번호가 맞지 않습니다. 처음이라면 "처음 가입"을 누르세요.'
+  if (/email not confirmed/i.test(m)) return '메일 인증이 아직 안 됐습니다. 받은 메일의 인증 링크를 누른 뒤 다시 로그인하세요.'
+  if (/already registered|already exists/i.test(m)) return '이미 가입된 이메일입니다. "로그인"을 누르세요.'
+  if (/password should be|weak password|at least/i.test(m)) return '로그인 비밀번호가 너무 짧거나 쉽습니다. 8자 이상으로 정하세요.'
+  if (/rate limit|too many/i.test(m)) return '요청이 너무 많습니다. 잠시 후 다시 시도하세요.'
   return m
 }
 
@@ -247,6 +260,19 @@ export function SyncProvider({ children }: { children: ReactNode }) {
           options: { emailRedirectTo: location.origin + location.pathname, shouldCreateUser: true },
         })
         if (error) throw new Error(error.message)
+      },
+      async signInPassword(addr, password) {
+        const { error } = await requireClient().auth.signInWithPassword({ email: addr, password })
+        if (error) throw new Error(authMessage(error.message))
+      },
+      async signUpPassword(addr, password) {
+        const { data: res, error } = await requireClient().auth.signUp({
+          email: addr,
+          password,
+          options: { emailRedirectTo: location.origin + location.pathname },
+        })
+        if (error) throw new Error(authMessage(error.message))
+        return res.session ? 'done' : 'confirm'
       },
       async verifyCode(addr, code) {
         const { error } = await requireClient().auth.verifyOtp({ email: addr, token: code.trim(), type: 'email' })
