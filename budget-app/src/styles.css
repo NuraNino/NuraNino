@@ -1633,3 +1633,38 @@ input[type='date']::-webkit-datetime-edit {
     animation: none;
   }
 }
+
+/* ---------- 계절 장식: 벚꽃·바다·야자수·메이플·눈사람 ---------- */
+.season-spring .s-a { opacity: 0.95; }
+.season-spring .s-b { opacity: 0.88; }
+.season .s-maple {
+  stroke: currentColor;
+  stroke-width: 0;
+  stroke-linejoin: round;
+}
+.season .s-halo { opacity: 0.35; }
+.season .s-sun { fill: #ffc93c; }
+.season .s-sea { fill: #3fb4d8; opacity: 0.7; }
+.season-summer .s-wave { stroke: #ffffff; opacity: 0.55; }
+.season .s-trunk { fill: none; stroke: #a46a3c; stroke-width: 5; stroke-linecap: round; }
+.season .s-frond { fill: #3fae6a; }
+.season .s-nut { fill: #7a4b2a; }
+.season .s-field { fill: var(--hero-ink); opacity: 0.92; }
+.season .s-snow { fill: var(--hero-ink); stroke: #c9d6ef; stroke-width: 1.2; }
+.season .s-coal { fill: #2b2d3a; }
+.season .s-carrot { fill: #f08a24; }
+.season .s-scarf { fill: #d2504f; }
+.season .s-hat { fill: #2b2d3a; }
+.season .s-hatband { fill: #d2504f; }
+.season .s-arm { fill: none; stroke: #7a4b2a; stroke-width: 2; stroke-linecap: round; }
+@supports (color: color-mix(in srgb, red, blue)) {
+  .season .s-sea { fill: color-mix(in srgb, #3fb4d8 65%, var(--primary)); }
+  .season .s-trunk { stroke: color-mix(in srgb, #a46a3c 78%, var(--primary)); }
+  .season .s-frond { fill: color-mix(in srgb, #3fae6a 75%, var(--primary)); }
+  .season .s-nut { fill: color-mix(in srgb, #7a4b2a 80%, var(--primary)); }
+  .season .s-field { fill: color-mix(in srgb, var(--hero-ink) 88%, var(--primary)); }
+  .season .s-snow { stroke: color-mix(in srgb, var(--primary) 35%, var(--hero-ink)); }
+  .season .s-scarf,
+  .season .s-hatband { fill: color-mix(in srgb, #d2504f 72%, var(--primary)); }
+  .season .s-arm { stroke: color-mix(in srgb, #7a4b2a 80%, var(--primary)); }
+}
