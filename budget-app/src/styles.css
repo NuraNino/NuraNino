@@ -1900,20 +1900,21 @@ body {
   }
 }
 
-/* 예산: 예비비 항목명 + 세부 내용 */
-.table.edit td.name-detail {
-  min-width: 140px;
+/* 예산: 예비비 항목 | 세부 내용 | 계획 … 한 줄에 나란히, 세로 가운데 정렬 */
+.table.edit td,
+.table.edit th {
+  vertical-align: middle;
 }
-.name-detail-label {
-  display: block;
+.table.edit td.name-cell {
   font-weight: 600;
 }
+.table.edit td.detail-cell {
+  min-width: 130px;
+  width: 40%;
+}
 .table.edit input.detail-input {
-  margin-top: 4px;
   width: 100%;
   min-width: 0;
-  padding: 5px 8px;
-  font-size: 13px;
 }
 
 /* 예산: 펼치는 계산란 */
@@ -1987,4 +1988,10 @@ body {
   .calc-row > td > .offering {
     max-width: none;
   }
+}
+/* 넓은 화면에서 계획 금액 입력칸이 지나치게 늘어나지 않게 */
+.table.edit td.num input.money {
+  max-width: 160px;
+  margin-left: auto;
+  display: block;
 }
