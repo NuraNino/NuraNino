@@ -1472,3 +1472,164 @@ input[type='date']::-webkit-datetime-edit {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* =====================================================================
+ * 계절 배경 (<html data-season="spring|summer|autumn|winter">, data-seasonal="off"면 끔)
+ * 장식 색은 계절 색과 현재 색상 테마(--primary, --hero-ink)를 섞어 만듭니다.
+ * ===================================================================== */
+:root {
+  --season-amt: 7%;
+  --season-c1: #f4a6c1;
+  --season-c2: #ffffff;
+  --season-c3: #ffd25e;
+  --season-tint: #f4a6c1;
+}
+:root[data-season='spring'] {
+  --season-c1: #f6a3c0; /* 벚꽃 */
+  --season-c2: #ffe3ee;
+  --season-c3: #c9e7a7;
+  --season-tint: #f6a3c0;
+}
+:root[data-season='summer'] {
+  --season-c1: #ffd25e; /* 해 */
+  --season-c2: #bfeeff;
+  --season-c3: #ffeaa3;
+  --season-tint: #5cc8e0;
+}
+:root[data-season='autumn'] {
+  --season-c1: #e8893a; /* 단풍 */
+  --season-c2: #cf5240;
+  --season-c3: #f2c14e;
+  --season-tint: #e8893a;
+}
+:root[data-season='winter'] {
+  --season-c1: #ffffff; /* 눈 */
+  --season-c2: #d6e6ff;
+  --season-c3: #ffffff;
+  --season-tint: #8fb3ea;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode='light']) {
+    --season-amt: 5%;
+  }
+}
+:root[data-mode='dark'] {
+  --season-amt: 5%;
+}
+
+@supports (color: color-mix(in srgb, red, blue)) {
+  /* 페이지 배경에 계절 색을 살짝 */
+  :root[data-season]:not([data-seasonal='off']) {
+    --bg: color-mix(in srgb, var(--season-tint) var(--season-amt), color-mix(in srgb, var(--tint) var(--tint-bg), var(--g-bg)));
+  }
+  /* 헤더도 계절 색 쪽으로 살짝 기울인 그라데이션 */
+  :root[data-season]:not([data-seasonal='off']) .hero {
+    background: linear-gradient(155deg, var(--hero-bg) 45%, color-mix(in srgb, var(--season-tint) 22%, var(--hero-bg)));
+  }
+}
+
+.season {
+  /* 실제 크기(400×200)로 오른쪽 위에 고정: 화면 너비가 달라도 장식 크기·위치가 일정 */
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 400px;
+  height: 200px;
+  pointer-events: none;
+}
+:root[data-seasonal='off'] .season {
+  display: none;
+}
+:root[data-season]:not([data-seasonal='off']) .deco-2 {
+  display: none;
+}
+
+/* 장식 색: 기본값(구형 브라우저) */
+.season .s-a { fill: var(--season-c1); opacity: 0.85; }
+.season .s-b { fill: var(--season-c2); opacity: 0.75; }
+.season .s-c { fill: var(--season-c3); opacity: 0.85; }
+.season .s-ink { fill: var(--hero-ink); stroke: var(--hero-ink); opacity: 0.75; }
+@supports (color: color-mix(in srgb, red, blue)) {
+  .season .s-a { fill: color-mix(in srgb, var(--season-c1) 78%, var(--primary)); }
+  .season .s-b { fill: color-mix(in srgb, var(--season-c2) 70%, var(--primary)); }
+  .season .s-c { fill: color-mix(in srgb, var(--season-c3) 78%, var(--primary)); }
+}
+.season .s-core { fill: var(--season-c3); }
+.season .s-vein {
+  fill: none;
+  stroke: var(--hero-bg);
+  stroke-width: 1.2;
+  opacity: 0.5;
+}
+.season .s-branch {
+  fill: none;
+  stroke: var(--hero-ink);
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.32;
+}
+.season .s-branch.thin {
+  stroke-width: 2;
+}
+.season .s-rays line {
+  stroke: var(--season-c1);
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.45;
+}
+.season .s-wave {
+  fill: none;
+  stroke: var(--season-c2);
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.5;
+}
+.season .s-wave.thin {
+  stroke-width: 2;
+  opacity: 0.32;
+}
+.season .s-flake line {
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+.season .s-b .s-flake line {
+  stroke: var(--season-c2);
+}
+.season .s-ink .s-flake line {
+  stroke: var(--hero-ink);
+}
+.season .s-dot {
+  fill: var(--hero-ink);
+  opacity: 0.55;
+}
+.season .s-drift {
+  fill: var(--hero-ink);
+  opacity: 0.12;
+}
+
+/* 천천히 흔들리며 떨어지기 */
+.season .drift {
+  animation: season-fall 14s linear infinite;
+}
+.season .d2 { animation-duration: 17s; animation-delay: -5s; }
+.season .d3 { animation-duration: 12s; animation-delay: -9s; }
+.season .d4 { animation-duration: 19s; animation-delay: -2s; }
+.season-summer .drift {
+  animation-name: season-float;
+}
+@keyframes season-fall {
+  0% { transform: translate(0, -40px); opacity: 0; }
+  10% { opacity: 1; }
+  50% { transform: translate(18px, 60px); }
+  90% { opacity: 1; }
+  100% { transform: translate(-6px, 170px); opacity: 0; }
+}
+@keyframes season-float {
+  0%, 100% { transform: translate(0, 0); opacity: 0.5; }
+  50% { transform: translate(6px, -10px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .season .drift {
+    animation: none;
+  }
+}

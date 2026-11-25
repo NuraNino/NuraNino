@@ -8,7 +8,7 @@ import { Card, MoneyInput } from '../components'
 import { RecurringSettings } from './Recurring'
 import { InstallmentSettings } from './Installments'
 import { SyncSettings } from './SyncSettings'
-import { ACCENTS, MODES, applyTheme, loadTheme, saveTheme, type Theme } from '../theme'
+import { ACCENTS, MODES, SEASON_LABEL, applyTheme, loadTheme, saveTheme, seasonOf, type Theme } from '../theme'
 
 async function readWorkbook(file: File): Promise<Workbook> {
   const { default: readXlsxFile, readSheetNames } = await import('read-excel-file')
@@ -371,6 +371,7 @@ function TitheSettings() {
 }
 
 function ThemeSettings() {
+  const { month } = useStore()
   const [theme, setTheme] = useState<Theme>(loadTheme)
   const update = (patch: Partial<Theme>) => {
     const next = { ...theme, ...patch }
@@ -413,6 +414,10 @@ function ThemeSettings() {
             </button>
           ))}
         </div>
+        <label className="check">
+          <input type="checkbox" checked={theme.seasonal} onChange={(e) => update({ seasonal: e.target.checked })} />
+          계절 배경 (보고 있는 달 기준 · 지금 {SEASON_LABEL[seasonOf(month)]})
+        </label>
         <p className="small muted">테마는 이 기기에만 저장되며, 백업 파일에는 포함되지 않습니다.</p>
       </div>
     </Card>
