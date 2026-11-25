@@ -21,8 +21,10 @@ export function defaultOfferings(data: BudgetData): AmountLine[] {
 
 export interface MemberTithe {
   member: TitheMember
-  /** 실 수입에서 대상 항목 합계 */
+  /** 대상 수입 합계 (실 수입, 아직 없으면 수입 계획) */
   incomeBase: number
+  /** 대상 수입 중 수입 계획 금액으로 대신한 항목 */
+  fromPlan: string[]
   /** 직접 더한 대상 수입 */
   extraLines: AmountLine[]
   base: number
@@ -45,11 +47,20 @@ export function offeringFor(data: BudgetData, month: string): OfferingResult {
   const plan = planOf(data, month)
   const incomes = incomesOfMonth(data, month)
   const members = titheMembers(data).map((member) => {
-    const set = new Set(member.sources)
-    const incomeBase = sum(incomes.filter((i) => set.has(i.source)).map((i) => i.amount))
+    // 엑셀처럼 이번 달 실제 수입이 아직 없으면 수입 계획 금액으로 계산 (월초에도 예산이 잡히도록)
+    const fromPlan: string[] = []
+    const incomeBase = sum(
+      member.sources.map((src) => {
+        const actual = sum(incomes.filter((i) => i.source === src).map((i) => i.amount))
+        if (actual) return actual
+        const planned = sum(plan.incomePlan.filter((p) => p.source === src).map((p) => p.amount))
+        if (planned) fromPlan.push(src)
+        return planned
+      }),
+    )
     const extraLines = plan.offering?.extraBase[member.id] ?? []
     const base = incomeBase + sum(extraLines.map((l) => l.amount))
-    return { member, incomeBase, extraLines, base, tithe: Math.round(base * rate) }
+    return { member, incomeBase, fromPlan, extraLines, base, tithe: Math.round(base * rate) }
   })
   const othersAreDefault = plan.offering?.others === undefined
   const others = plan.offering?.others ?? defaultOfferings(data)

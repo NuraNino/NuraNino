@@ -75,6 +75,8 @@ export interface IncomePlanItem {
 export interface BudgetLine {
   amount: number
   memo?: string // 예: "벅스+쿠팡+자동차+와이즐리"
+  /** 계산란: 줄이 있으면 예산 = 줄 금액 합계 (엑셀의 =117077+20912+… 수식 대신) */
+  calc?: AmountLine[]
 }
 
 export interface MonthPlan {

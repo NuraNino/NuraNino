@@ -1899,3 +1899,92 @@ body {
     font-size: 16px !important;
   }
 }
+
+/* 예산: 예비비 항목명 + 세부 내용 */
+.table.edit td.name-detail {
+  min-width: 140px;
+}
+.name-detail-label {
+  display: block;
+  font-weight: 600;
+}
+.table.edit input.detail-input {
+  margin-top: 4px;
+  width: 100%;
+  min-width: 0;
+  padding: 5px 8px;
+  font-size: 13px;
+}
+
+/* 예산: 펼치는 계산란 */
+.card-hint {
+  margin: -4px 0 6px;
+}
+.expander {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  background: none;
+  padding: 4px 2px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.expander .chev {
+  flex: none;
+  color: var(--muted);
+  transition: transform 0.15s ease;
+}
+.expanded .expander .chev {
+  transform: rotate(90deg);
+  color: var(--primary);
+}
+.expander .tag {
+  margin-left: 2px;
+  font-size: 10px;
+}
+.auto-amount {
+  border: 1px dashed var(--border);
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 6px 8px;
+  min-width: 92px;
+  text-align: right;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  cursor: pointer;
+}
+.table .calc-row > td {
+  padding: 4px 0 12px;
+  white-space: normal;
+  border-bottom: 1px solid var(--border);
+}
+.calc-panel,
+.calc-row .offering {
+  background: var(--surface-2);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+.calc-row .member {
+  background: var(--surface);
+}
+.table tr.expanded > td {
+  border-bottom: 0;
+}
+/* 표가 가로로 넓어도 펼친 계산란은 화면 안에 보이게 (표 안에서 왼쪽에 붙고 화면 너비까지만) */
+.calc-row > td > .calc-panel,
+.calc-row > td > .offering {
+  position: sticky;
+  left: 0;
+  max-width: calc(100vw - 66px);
+  box-sizing: border-box;
+}
+@media (min-width: 760px) {
+  .calc-row > td > .calc-panel,
+  .calc-row > td > .offering {
+    max-width: none;
+  }
+}

@@ -55,3 +55,38 @@ describe('헌금 계산', () => {
     expect(r.total).toBe(317887 + 58020 + 50000)
   })
 })
+
+describe('예산 금액 결정 (계산란·헌금 자동)', () => {
+  it('계산란 줄이 있으면 합계가 예산, 없으면 직접 입력 금액', async () => {
+    const { plannedAmount, monthSummary } = await import('./calc')
+    const d = base()
+    const ins = d.categories.find((c) => c.name === '보험')!.id
+    const food = d.categories.find((c) => c.name === '집밥')!.id
+    d.plans['2026-11'] = {
+      budgets: {
+        [ins]: { amount: 1, calc: [{ id: 'a', label: '건강', amount: 117077 }, { id: 'b', label: '실손', amount: 20912 }] },
+        [food]: { amount: 300000 },
+      },
+      incomePlan: [],
+    }
+    expect(plannedAmount(d, '2026-11', ins)).toBe(137989)
+    expect(plannedAmount(d, '2026-11', food)).toBe(300000)
+    expect(monthSummary(d, '2026-11').expensePlanned).toBe(437989)
+  })
+
+  it('헌금 계산을 설정하면 헌금 예산 = 총 헌금, 실 수입이 없으면 수입 계획으로', async () => {
+    const { plannedAmount } = await import('./calc')
+    const d = base()
+    const tithe = d.settings.tithe.categoryId!
+    d.incomes = [] // 아직 월급이 안 들어옴
+    d.settings.tithe.members = [{ id: 'h', name: '남편', sources: ['A 월급'] }]
+    d.settings.tithe.defaultOfferings = [{ id: 'o', label: '선교헌금', amount: 20000 }]
+    d.plans['2026-12'] = { budgets: { [tithe]: { amount: 999 } }, incomePlan: [{ id: 'p', kind: '월급', source: 'A 월급', amount: 3000000 }] }
+    const r = offeringFor(d, '2026-12')
+    expect(r.members[0].fromPlan).toEqual(['A 월급'])
+    expect(plannedAmount(d, '2026-12', tithe)).toBe(300000 + 20000)
+    // 헌금 계산을 끄면 직접 입력 금액
+    d.settings.tithe.enabled = false
+    expect(plannedAmount(d, '2026-12', tithe)).toBe(999)
+  })
+})
