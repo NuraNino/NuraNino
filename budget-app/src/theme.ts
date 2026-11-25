@@ -1,6 +1,6 @@
 /** 화면 테마(기기별 설정). 가계부 데이터와 별개로 이 브라우저에만 저장됩니다. */
 export type ThemeMode = 'system' | 'light' | 'dark'
-export type Accent = 'green' | 'blue' | 'purple' | 'rose' | 'orange' | 'slate'
+export type Accent = 'periwinkle' | 'green' | 'blue' | 'purple' | 'rose' | 'orange' | 'slate'
 
 export interface Theme {
   mode: ThemeMode
@@ -8,6 +8,7 @@ export interface Theme {
 }
 
 export const ACCENTS: { id: Accent; label: string; light: string; dark: string }[] = [
+  { id: 'periwinkle', label: '페리윙클', light: '#5f73d6', dark: '#7e8fea' },
   { id: 'green', label: '숲 초록', light: '#1f6f5c', dark: '#4fb79a' },
   { id: 'blue', label: '바다 파랑', light: '#2559c7', dark: '#6c9cff' },
   { id: 'purple', label: '라벤더', light: '#6b46c1', dark: '#a68bf0' },
@@ -23,7 +24,7 @@ export const MODES: { id: ThemeMode; label: string }[] = [
 ]
 
 const KEY = 'household-budget:theme'
-const DEFAULT: Theme = { mode: 'system', accent: 'green' }
+const DEFAULT: Theme = { mode: 'system', accent: 'periwinkle' }
 
 export function loadTheme(): Theme {
   try {
@@ -53,7 +54,7 @@ export function applyTheme(t: Theme) {
   // 상태 표시줄 색을 현재 배경색과 맞춤 (styles.css 의 --bg 계산과 같은 값)
   const dark = t.mode === 'dark' || (t.mode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
   const a = ACCENTS.find((x) => x.id === t.accent) ?? ACCENTS[0]
-  const bg = dark ? mix(a.dark, '#111213', 0.06) : mix(a.light, '#f5f6f6', 0.05)
+  const bg = dark ? mix(a.dark, '#13141b', 0.38) : a.light
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', bg)
 }
 

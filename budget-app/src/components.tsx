@@ -83,3 +83,30 @@ export function Diff({ value }: { value: number }) {
 export function Empty({ children }: { children: ReactNode }) {
   return <p className="empty">{children}</p>
 }
+
+/** 원형 진행 표시 (가운데에 아이콘 등) */
+export function Ring({ value, max, size = 56, className = '', children }: { value: number; max: number; size?: number; className?: string; children?: ReactNode }) {
+  const r = (size - 6) / 2
+  const c = 2 * Math.PI * r
+  const pct = max > 0 ? Math.min(1, value / max) : value > 0 ? 1 : 0
+  const over = max >= 0 && value > max
+  return (
+    <span className={`ring ${className}${over ? ' over' : ''}`} style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden>
+        <circle className="ring-track" cx={size / 2} cy={size / 2} r={r} strokeWidth={4} fill="none" />
+        <circle
+          className="ring-fill"
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          strokeWidth={4}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={`${c * pct} ${c}`}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </svg>
+      <span className="ring-center">{children}</span>
+    </span>
+  )
+}

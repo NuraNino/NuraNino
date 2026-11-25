@@ -5,6 +5,7 @@ import { uid } from '../domain/defaults'
 import { GROUPS, type Group, type Transaction } from '../domain/types'
 import { Card, Empty, MoneyInput } from '../components'
 import { RecurringDue } from './Recurring'
+import { CategoryBadge } from '../icons'
 
 interface Draft {
   date: string
@@ -253,11 +254,11 @@ export function Transactions({ go }: { go: (tab: string) => void }) {
                     return (
                       <li key={t.id} className={`tx${editing === t.id ? ' editing' : ''}`}>
                         <button className="tx-main" onClick={() => startEdit(t)} aria-label={`${t.memo || c?.name} 수정`}>
-                          <span className="tx-date">{Number(t.date.slice(8))}일</span>
+                          <CategoryBadge category={c} size={38} />
                           <span className="tx-body">
                             <span className="tx-memo">{t.memo || c?.name}</span>
                             <span className="muted small">
-                              {c?.group} · {c?.name} · {pmName(t.paymentMethodId)}
+                              {Number(t.date.slice(8))}일 · {c?.name} · {pmName(t.paymentMethodId)}
                               {t.note ? ` · ${t.note}` : ''}
                             </span>
                           </span>

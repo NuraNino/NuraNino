@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ArrowDownToLine, ChartColumn, ChevronLeft, ChevronRight, House, Receipt, Settings2, Wallet } from 'lucide-react'
 import { useStore } from './store'
 import { addMonths, monthLabel } from './domain/calc'
 import { Dashboard } from './views/Dashboard'
@@ -7,19 +8,22 @@ import { Income } from './views/Income'
 import { Budget } from './views/Budget'
 import { Reports } from './views/Reports'
 import { Settings } from './views/Settings'
+import { SyncBadge } from './views/SyncSettings'
+import { pendingInvite } from './sync/SyncProvider'
 
 const TABS = [
-  { id: 'home', label: '요약', icon: '◎' },
-  { id: 'tx', label: '지출', icon: '＋' },
-  { id: 'income', label: '수입', icon: '↓' },
-  { id: 'budget', label: '예산', icon: '▤' },
-  { id: 'reports', label: '리포트', icon: '▦' },
-  { id: 'settings', label: '설정', icon: '⚙' },
+  { id: 'home', label: '요약', title: '이번 달 요약', Icon: House },
+  { id: 'tx', label: '지출', title: '지출', Icon: Receipt },
+  { id: 'income', label: '수입', title: '수입', Icon: ArrowDownToLine },
+  { id: 'budget', label: '예산', title: '예산', Icon: Wallet },
+  { id: 'reports', label: '리포트', title: '리포트', Icon: ChartColumn },
+  { id: 'settings', label: '설정', title: '설정', Icon: Settings2 },
 ] as const
 type TabId = (typeof TABS)[number]['id']
 
 const TAB_KEY = 'household-budget:tab'
 const initialTab = (): TabId => {
+  if (pendingInvite()) return 'settings'
   try {
     const t = localStorage.getItem(TAB_KEY)
     if (TABS.some((x) => x.id === t)) return t as TabId
@@ -42,31 +46,40 @@ export function App() {
     window.scrollTo({ top: 0 })
   }
 
+  const current = TABS.find((t) => t.id === tab) ?? TABS[0]
+
   return (
     <div className="app">
-      <header className="topbar">
-        <h1 className="brand">우리집 가계부</h1>
-        <div className="month-nav" aria-label="월 선택">
-          <button className="icon-btn" onClick={() => setMonth(addMonths(month, -1))} aria-label="이전 달">
-            ‹
-          </button>
-          <label className="month-label">
-            <span>{monthLabel(month)}</span>
-            <input type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} aria-label="월" />
-          </label>
-          <button className="icon-btn" onClick={() => setMonth(addMonths(month, 1))} aria-label="다음 달">
-            ›
-          </button>
+      <header className="hero">
+        <span className="deco deco-1" aria-hidden />
+        <span className="deco deco-2" aria-hidden />
+        <span className="deco deco-3" aria-hidden />
+        <div className="hero-top">
+          <div className="brand-wrap">
+            <span className="brand">우리집 가계부</span>
+            <SyncBadge onClick={() => setTab('settings')} />
+          </div>
+          <div className="month-nav" aria-label="월 선택">
+            <button className="icon-btn" onClick={() => setMonth(addMonths(month, -1))} aria-label="이전 달">
+              <ChevronLeft size={20} />
+            </button>
+            <label className="month-label">
+              <span>{monthLabel(month)}</span>
+              <input type="month" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} aria-label="월" />
+            </label>
+            <button className="icon-btn" onClick={() => setMonth(addMonths(month, 1))} aria-label="다음 달">
+              <ChevronRight size={20} />
+            </button>
+          </div>
         </div>
+        <h1 className="hero-title">{current.title}</h1>
       </header>
 
       <nav className="tabbar" aria-label="메뉴">
         {TABS.map((t) => (
           <button key={t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)} aria-current={tab === t.id ? 'page' : undefined}>
-            <span className="tab-icon" aria-hidden>
-              {t.icon}
-            </span>
-            {t.label}
+            <t.Icon size={22} strokeWidth={tab === t.id ? 2.4 : 1.8} aria-hidden />
+            <span className="tab-label">{t.label}</span>
           </button>
         ))}
       </nav>
