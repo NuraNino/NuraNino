@@ -3,7 +3,8 @@ import { isBudgetData, useStore } from '../store'
 import { applyImport, parseWorkbook, type ImportStats, type ParsedWorkbook, type Workbook } from '../domain/importExcel'
 import { createDefaultData, uid } from '../domain/defaults'
 import { monthLabel, todayISO } from '../domain/calc'
-import { GROUPS, type Group, type TitheMember } from '../domain/types'
+import { GROUPS, type BudgetData, type Group, type TitheMember } from '../domain/types'
+import { useSync } from '../sync/SyncProvider'
 import { defaultOfferings, titheMembers } from '../domain/offering'
 import { Card, MoneyInput } from '../components'
 import { RecurringSettings } from './Recurring'
@@ -128,26 +129,72 @@ function ExcelImport() {
   )
 }
 
+async function saveFile(blob: Blob, name: string) {
+  // 휴대폰(특히 홈 화면 앱)에서는 공유 시트로 "파일에 저장"·메신저 전송, 그 밖에는 바로 내려받기
+  const file = new File([blob], name, { type: blob.type })
+  const touch = matchMedia('(pointer: coarse)').matches
+  if (touch && navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: name })
+      return
+    } catch (e) {
+      if ((e as Error).name === 'AbortError') return
+    }
+  }
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = name
+  a.style.display = 'none'
+  document.body.appendChild(a) // 문서에 붙여야 파일 이름이 지켜지는 브라우저가 있음
+  a.click()
+  setTimeout(() => {
+    URL.revokeObjectURL(a.href)
+    a.remove()
+  }, 1000)
+}
+
 function Backup() {
   const { data, setData } = useStore()
+  const sync = useSync()
   const [msg, setMsg] = useState('')
+  const [busy, setBusy] = useState(false)
+  const shared = sync.phase === 'ready'
 
-  const exportJson = () => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = `가계부-백업-${todayISO()}.json`
-    a.click()
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+  const exportExcel = async () => {
+    setBusy(true)
+    setMsg('')
+    try {
+      const [{ default: writeXlsxFile }, { buildBackupSheets }] = await Promise.all([
+        import('write-excel-file/browser'),
+        import('../domain/exportExcel'),
+      ])
+      const blob = await writeXlsxFile(buildBackupSheets(data) as never, {}).toBlob()
+      await saveFile(blob, `gagyebu-backup-${todayISO()}.xlsx`)
+    } catch (e) {
+      setMsg(`백업 파일을 만들지 못했습니다: ${(e as Error).message}`)
+    } finally {
+      setBusy(false)
+    }
   }
 
-  const importJson = async (file: File | undefined) => {
+  const restore = async (file: File | undefined) => {
     if (!file) return
     try {
-      const parsed = JSON.parse(await file.text())
+      let parsed: unknown
+      // 엑셀(.xlsx)은 zip 파일이라 'PK'로 시작 → 이름·형식 정보가 없어도 내용으로 구분
+      const magic = new Uint8Array(await file.slice(0, 2).arrayBuffer())
+      if (magic[0] === 0x50 && magic[1] === 0x4b) {
+        const { readBackupFromWorkbook } = await import('../domain/exportExcel')
+        parsed = readBackupFromWorkbook(await readWorkbook(file))
+        if (parsed === null)
+          throw new Error('이 앱에서 만든 백업 파일이 아닙니다. 예전 엑셀 가계부는 위의 "엑셀 가계부 가져오기"를 쓰세요.')
+      } else {
+        parsed = JSON.parse(await file.text())
+      }
       if (!isBudgetData(parsed)) throw new Error('가계부 백업 파일 형식이 아닙니다.')
-      if (!confirm('현재 데이터를 백업 파일 내용으로 바꿀까요?')) return
-      setData(() => parsed)
+      const warn = shared ? '\n\n함께 쓰기 중이라 배우자 기기의 데이터도 이 백업 내용으로 바뀝니다.' : ''
+      if (!confirm(`현재 데이터를 백업 파일 내용으로 바꿀까요?${warn}`)) return
+      setData(() => parsed as BudgetData)
       setMsg('백업을 복원했습니다.')
     } catch (e) {
       setMsg(`복원 실패: ${(e as Error).message}`)
@@ -157,20 +204,21 @@ function Backup() {
   return (
     <Card title="백업 · 다른 기기로 옮기기">
       <p className="small muted">
-        데이터는 이 브라우저에만 저장됩니다. 정기적으로 백업 파일을 내려받고, 다른 휴대폰에서는 백업 파일로 복원하세요.
+        백업 파일은 엑셀(.xlsx)로 만들어집니다. 지출·수입·예산·월별 요약을 엑셀에서 바로 볼 수 있고, 같은 파일로 앱에 복원할 수 있습니다.
+        {shared ? ' 함께 쓰기 중에도 만일을 위해 가끔 내려받아 두세요.' : ' 데이터는 이 기기에만 저장되니 정기적으로 내려받아 두세요.'}
       </p>
       <div className="row-wrap">
-        <button className="btn" onClick={exportJson}>
-          백업 파일 내려받기
+        <button className="btn" onClick={() => void exportExcel()} disabled={busy}>
+          {busy ? '만드는 중…' : '백업 파일 내려받기 (엑셀)'}
         </button>
         <label className="btn">
           백업 파일로 복원
           <input
             type="file"
-            accept="application/json,.json"
+            accept=".xlsx,.json,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             hidden
             onChange={(e) => {
-              void importJson(e.target.files?.[0])
+              void restore(e.target.files?.[0])
               e.target.value = ''
             }}
           />
@@ -178,7 +226,8 @@ function Backup() {
         <button
           className="btn danger"
           onClick={() => {
-            if (confirm('모든 데이터를 지우고 처음 상태로 돌아갈까요? 되돌릴 수 없습니다.')) {
+            const warn = shared ? '\n\n함께 쓰기 중이라 서버와 배우자 기기의 데이터도 모두 지워집니다.' : ''
+            if (confirm(`모든 데이터를 지우고 처음 상태로 돌아갈까요? 되돌릴 수 없습니다.${warn}`)) {
               setData(() => createDefaultData())
               setMsg('초기화했습니다.')
             }
@@ -187,6 +236,7 @@ function Backup() {
           전체 초기화
         </button>
       </div>
+      <p className="small muted">예전에 받은 .json 백업 파일로도 복원할 수 있습니다.</p>
       {msg && <p className="small">{msg}</p>}
     </Card>
   )
