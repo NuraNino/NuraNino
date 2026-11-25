@@ -1721,3 +1721,10 @@ input[type='date']::-webkit-datetime-edit {
 :root[data-season]:not([data-seasonal='off'])[data-mode='dark'] .hero .sync-badge {
   background: rgb(0 0 0 / 0.3);
 }
+
+/* 좁은 화면(아이폰 SE·미니): 앱 이름이 길어져도 상단 한 줄에 들어가게 */
+@media (max-width: 380px) {
+  .hero .brand { font-size: 13px; }
+  .hero .month-label { font-size: 14px; padding: 4px 2px; }
+  .hero .month-nav .icon-btn { width: 28px; }
+}

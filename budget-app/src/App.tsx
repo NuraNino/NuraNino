@@ -57,7 +57,7 @@ export function App() {
         <SeasonLayer season={seasonOf(month)} />
         <div className="hero-top">
           <div className="brand-wrap">
-            <span className="brand">우리집 가계부</span>
+            <span className="brand">메덩파카 가계부</span>
             <SyncBadge onClick={() => setTab('settings')} />
           </div>
           <div className="month-nav" aria-label="월 선택">
