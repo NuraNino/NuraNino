@@ -93,7 +93,7 @@ function updateStatusBar(t: Theme) {
   let color: string
   if (t.seasonal) {
     const sky = mix(a.light, SEASON_SKY[currentSeason], 0.12)
-    color = dark ? mix('#000000', sky, 0.58) : sky
+    color = dark ? mix('#000000', sky, 0.45) : sky
   } else {
     color = dark ? mix(a.dark, '#13141b', 0.38) : a.light
   }

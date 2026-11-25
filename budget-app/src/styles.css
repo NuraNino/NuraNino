@@ -1728,3 +1728,36 @@ input[type='date']::-webkit-datetime-edit {
   .hero .month-label { font-size: 14px; padding: 4px 2px; }
   .hero .month-nav .icon-btn { width: 28px; }
 }
+
+/* =====================================================================
+ * iOS 26 사파리: 화면 맨 위에 페이지가 끌 수 없는 흐림 띠가 생기고, 그 색은 페이지 배경색을 따름.
+ * → 페이지(html·body) 배경을 헤더 색과 맞춰 띠가 헤더와 이어져 보이게 하고,
+ *   본문(.app)은 원래 배경색을 유지. 상단 줄도 흐림 영역에서 조금 내림.
+ * ===================================================================== */
+:root {
+  --top-color: var(--hero-bg);
+}
+@supports (color: color-mix(in srgb, red, blue)) {
+  :root[data-season]:not([data-seasonal='off']) {
+    --top-color: color-mix(in srgb, var(--season-sky) 88%, var(--primary));
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-season]:not([data-seasonal='off']):not([data-mode='light']) {
+      /* 다크 모드 풍경은 밝기 55%로 어둡게 그려지므로 같은 정도로 */
+      --top-color: color-mix(in srgb, color-mix(in srgb, var(--season-sky) 88%, var(--primary)) 55%, #000);
+    }
+  }
+  :root[data-season]:not([data-seasonal='off'])[data-mode='dark'] {
+    --top-color: color-mix(in srgb, color-mix(in srgb, var(--season-sky) 88%, var(--primary)) 55%, #000);
+  }
+}
+html,
+body {
+  background-color: var(--top-color);
+}
+.app {
+  background: var(--bg);
+}
+.hero {
+  padding-top: calc(22px + env(safe-area-inset-top));
+}
