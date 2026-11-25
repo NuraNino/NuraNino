@@ -1472,3 +1472,252 @@ input[type='date']::-webkit-datetime-edit {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* =====================================================================
+ * 계절 배경 (<html data-season="spring|summer|autumn|winter">, data-seasonal="off"면 끔)
+ * 장식 색은 계절 색과 현재 색상 테마(--primary, --hero-ink)를 섞어 만듭니다.
+ * ===================================================================== */
+:root {
+  --season-amt: 7%;
+  --season-c1: #f4a6c1;
+  --season-c2: #ffffff;
+  --season-c3: #ffd25e;
+  --season-tint: #f4a6c1;
+}
+:root[data-season='spring'] {
+  --season-c1: #f6a3c0; /* 벚꽃 */
+  --season-c2: #ffe3ee;
+  --season-c3: #c9e7a7;
+  --season-tint: #f6a3c0;
+}
+:root[data-season='summer'] {
+  --season-c1: #ffd25e; /* 해 */
+  --season-c2: #bfeeff;
+  --season-c3: #ffeaa3;
+  --season-tint: #5cc8e0;
+}
+:root[data-season='autumn'] {
+  --season-c1: #e8893a; /* 단풍 */
+  --season-c2: #cf5240;
+  --season-c3: #f2c14e;
+  --season-tint: #e8893a;
+}
+:root[data-season='winter'] {
+  --season-c1: #ffffff; /* 눈 */
+  --season-c2: #d6e6ff;
+  --season-c3: #ffffff;
+  --season-tint: #8fb3ea;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode='light']) {
+    --season-amt: 5%;
+  }
+}
+:root[data-mode='dark'] {
+  --season-amt: 5%;
+}
+
+@supports (color: color-mix(in srgb, red, blue)) {
+  /* 페이지 배경에 계절 색을 살짝 */
+  :root[data-season]:not([data-seasonal='off']) {
+    --bg: color-mix(in srgb, var(--season-tint) var(--season-amt), color-mix(in srgb, var(--tint) var(--tint-bg), var(--g-bg)));
+  }
+  /* 헤더 하늘색에도 테마 색을 조금 */
+  :root[data-season]:not([data-seasonal='off']) .hero {
+    background: color-mix(in srgb, var(--season-sky) 88%, var(--primary)) !important;
+  }
+}
+
+.season {
+  /* 실제 크기(400×200)로 오른쪽 위에 고정: 화면 너비가 달라도 장식 크기·위치가 일정 */
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 400px;
+  height: 200px;
+  pointer-events: none;
+}
+:root[data-seasonal='off'] .season {
+  display: none;
+}
+:root[data-season]:not([data-seasonal='off']) .deco-2 {
+  display: none;
+}
+
+/* 장식 색: 기본값(구형 브라우저) */
+.season .s-a { fill: var(--season-c1); opacity: 0.85; }
+.season .s-b { fill: var(--season-c2); opacity: 0.75; }
+.season .s-c { fill: var(--season-c3); opacity: 0.85; }
+.season .s-ink { fill: var(--hero-ink); stroke: var(--hero-ink); opacity: 0.75; }
+@supports (color: color-mix(in srgb, red, blue)) {
+  .season .s-a { fill: color-mix(in srgb, var(--season-c1) 78%, var(--primary)); }
+  .season .s-b { fill: color-mix(in srgb, var(--season-c2) 70%, var(--primary)); }
+  .season .s-c { fill: color-mix(in srgb, var(--season-c3) 78%, var(--primary)); }
+}
+.season .s-core { fill: var(--season-c3); }
+.season .s-vein {
+  fill: none;
+  stroke: var(--hero-bg);
+  stroke-width: 1.2;
+  opacity: 0.5;
+}
+.season .s-branch {
+  fill: none;
+  stroke: var(--hero-ink);
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.32;
+}
+.season .s-branch.thin {
+  stroke-width: 2;
+}
+.season .s-rays line {
+  stroke: var(--season-c1);
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.45;
+}
+.season .s-wave {
+  fill: none;
+  stroke: var(--season-c2);
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.5;
+}
+.season .s-wave.thin {
+  stroke-width: 2;
+  opacity: 0.32;
+}
+.season .s-flake line {
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+.season .s-b .s-flake line {
+  stroke: var(--season-c2);
+}
+.season .s-ink .s-flake line {
+  stroke: var(--hero-ink);
+}
+.season .s-dot {
+  fill: var(--hero-ink);
+  opacity: 0.55;
+}
+.season .s-drift {
+  fill: var(--hero-ink);
+  opacity: 0.12;
+}
+
+/* 천천히 흔들리며 떨어지기 */
+.season .drift {
+  animation: season-fall 14s linear infinite;
+}
+.season .d2 { animation-duration: 17s; animation-delay: -5s; }
+.season .d3 { animation-duration: 12s; animation-delay: -9s; }
+.season .d4 { animation-duration: 19s; animation-delay: -2s; }
+.season-summer .drift {
+  animation-name: season-float;
+}
+@keyframes season-fall {
+  0% { transform: translate(0, -40px); opacity: 0; }
+  10% { opacity: 1; }
+  50% { transform: translate(18px, 60px); }
+  90% { opacity: 1; }
+  100% { transform: translate(-6px, 170px); opacity: 0; }
+}
+@keyframes season-float {
+  0%, 100% { transform: translate(0, 0); opacity: 0.5; }
+  50% { transform: translate(6px, -10px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .season .drift {
+    animation: none;
+  }
+}
+
+/* ---------- 계절 장식: 벚꽃·바다·야자수·메이플·눈사람 ---------- */
+.season-spring .s-a { opacity: 0.95; }
+.season-spring .s-b { opacity: 0.88; }
+.season .s-maple {
+  stroke: currentColor;
+  stroke-width: 0;
+  stroke-linejoin: round;
+}
+.season .s-halo { opacity: 0.35; }
+.season .s-sun { fill: #ffc93c; }
+.season .s-sea { fill: #3fb4d8; opacity: 0.7; }
+.season-summer .s-wave { stroke: #ffffff; opacity: 0.55; }
+.season .s-trunk { fill: none; stroke: #a46a3c; stroke-width: 5; stroke-linecap: round; }
+.season .s-frond { fill: #3fae6a; }
+.season .s-nut { fill: #7a4b2a; }
+.season .s-field { fill: var(--hero-ink); opacity: 0.92; }
+.season .s-snow { fill: var(--hero-ink); stroke: #c9d6ef; stroke-width: 1.2; }
+.season .s-coal { fill: #2b2d3a; }
+.season .s-carrot { fill: #f08a24; }
+.season .s-scarf { fill: #d2504f; }
+.season .s-hat { fill: #2b2d3a; }
+.season .s-hatband { fill: #d2504f; }
+.season .s-arm { fill: none; stroke: #7a4b2a; stroke-width: 2; stroke-linecap: round; }
+@supports (color: color-mix(in srgb, red, blue)) {
+  .season .s-sea { fill: color-mix(in srgb, #3fb4d8 65%, var(--primary)); }
+  .season .s-trunk { stroke: color-mix(in srgb, #a46a3c 78%, var(--primary)); }
+  .season .s-frond { fill: color-mix(in srgb, #3fae6a 75%, var(--primary)); }
+  .season .s-nut { fill: color-mix(in srgb, #7a4b2a 80%, var(--primary)); }
+  .season .s-field { fill: color-mix(in srgb, var(--hero-ink) 88%, var(--primary)); }
+  .season .s-snow { stroke: color-mix(in srgb, var(--primary) 35%, var(--hero-ink)); }
+  .season .s-scarf,
+  .season .s-hatband { fill: color-mix(in srgb, #d2504f 72%, var(--primary)); }
+  .season .s-arm { stroke: color-mix(in srgb, #7a4b2a 80%, var(--primary)); }
+}
+
+/* =====================================================================
+ * 계절 풍경 헤더 (SeasonLayer: 헤더 전체를 채우는 일러스트)
+ * ===================================================================== */
+:root[data-season='spring'] { --season-sky: #fde4ec; --season-ink: #5a2a3f; }
+:root[data-season='summer'] { --season-sky: #5ccbe3; --season-ink: #0e3550; }
+:root[data-season='autumn'] { --season-sky: #fbe9d2; --season-ink: #4a2b33; }
+:root[data-season='winter'] { --season-sky: #d3e8f4; --season-ink: #1f2a44; }
+
+.season {
+  inset: 0;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+}
+:root[data-season]:not([data-seasonal='off']) {
+  --hero-ink: var(--season-ink);
+}
+:root[data-season]:not([data-seasonal='off']) .hero {
+  background: var(--season-sky);
+  padding-bottom: 84px;
+}
+:root[data-season]:not([data-seasonal='off']) .hero .brand {
+  opacity: 1;
+}
+:root[data-season]:not([data-seasonal='off']) .hero .sync-badge {
+  background: rgb(255 255 255 / 0.6);
+}
+:root[data-season]:not([data-seasonal='off']) .hero .icon-btn:hover {
+  background: rgb(255 255 255 / 0.4);
+}
+/* 다크 모드: 같은 풍경을 밤처럼 어둡게, 글자는 밝게 */
+@media (prefers-color-scheme: dark) {
+  :root[data-season]:not([data-seasonal='off']):not([data-mode='light']) {
+    --hero-ink: #f1eff6;
+  }
+  :root:not([data-mode='light']) .season {
+    filter: brightness(0.55) saturate(0.85);
+  }
+  :root[data-season]:not([data-seasonal='off']):not([data-mode='light']) .hero .sync-badge {
+    background: rgb(0 0 0 / 0.3);
+  }
+}
+:root[data-season]:not([data-seasonal='off'])[data-mode='dark'] {
+  --hero-ink: #f1eff6;
+}
+:root[data-mode='dark'] .season {
+  filter: brightness(0.55) saturate(0.85);
+}
+:root[data-season]:not([data-seasonal='off'])[data-mode='dark'] .hero .sync-badge {
+  background: rgb(0 0 0 / 0.3);
+}

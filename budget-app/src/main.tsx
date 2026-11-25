@@ -4,9 +4,11 @@ import { StoreProvider } from './store'
 import { App } from './App'
 import { SyncProvider, takeInviteFromUrl } from './sync/SyncProvider'
 import './styles.css'
-import { applyTheme, loadTheme } from './theme'
+import { applySeason, applyTheme, loadTheme } from './theme'
+import { monthOf, todayISO } from './domain/calc'
 
 applyTheme(loadTheme())
+applySeason(monthOf(todayISO()))
 takeInviteFromUrl()
 // '기기 설정' 모드일 때 시스템 다크 모드 전환을 상태 표시줄 색에도 반영
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => applyTheme(loadTheme()))

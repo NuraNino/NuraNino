@@ -5,6 +5,8 @@ export type Accent = 'periwinkle' | 'green' | 'blue' | 'purple' | 'rose' | 'oran
 export interface Theme {
   mode: ThemeMode
   accent: Accent
+  /** 보고 있는 달의 계절에 따라 배경 장식·색 바꾸기 */
+  seasonal: boolean
 }
 
 export const ACCENTS: { id: Accent; label: string; light: string; dark: string }[] = [
@@ -24,7 +26,7 @@ export const MODES: { id: ThemeMode; label: string }[] = [
 ]
 
 const KEY = 'household-budget:theme'
-const DEFAULT: Theme = { mode: 'system', accent: 'periwinkle' }
+const DEFAULT: Theme = { mode: 'system', accent: 'periwinkle', seasonal: true }
 
 export function loadTheme(): Theme {
   try {
@@ -32,6 +34,7 @@ export function loadTheme(): Theme {
     return {
       mode: MODES.some((m) => m.id === t?.mode) ? t!.mode! : DEFAULT.mode,
       accent: ACCENTS.some((a) => a.id === t?.accent) ? t!.accent! : DEFAULT.accent,
+      seasonal: typeof t?.seasonal === 'boolean' ? t.seasonal : DEFAULT.seasonal,
     }
   } catch {
     return DEFAULT
@@ -51,11 +54,8 @@ export function applyTheme(t: Theme) {
   if (t.mode === 'system') root.removeAttribute('data-mode')
   else root.setAttribute('data-mode', t.mode)
   root.setAttribute('data-accent', t.accent)
-  // 상태 표시줄 색을 현재 배경색과 맞춤 (styles.css 의 --bg 계산과 같은 값)
-  const dark = t.mode === 'dark' || (t.mode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
-  const a = ACCENTS.find((x) => x.id === t.accent) ?? ACCENTS[0]
-  const bg = dark ? mix(a.dark, '#13141b', 0.38) : a.light
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', bg)
+  root.setAttribute('data-seasonal', t.seasonal ? 'on' : 'off')
+  updateStatusBar(t)
 }
 
 /** hex 두 색을 ratio 비율로 섞음 (CSS color-mix in srgb 와 동일) */
@@ -63,4 +63,39 @@ function mix(tint: string, base: string, ratio: number): string {
   const rgb = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))
   const [t, b] = [rgb(tint), rgb(base)]
   return '#' + t.map((v, i) => Math.round(v * ratio + b[i] * (1 - ratio)).toString(16).padStart(2, '0')).join('')
+}
+
+export type Season = 'spring' | 'summer' | 'autumn' | 'winter'
+
+export const SEASON_LABEL: Record<Season, string> = { spring: '봄', summer: '여름', autumn: '가을', winter: '겨울' }
+
+/** 'YYYY-MM' → 계절 (3–5 봄, 6–8 여름, 9–11 가을, 12–2 겨울) */
+export function seasonOf(month: string): Season {
+  const m = Number(month.slice(5, 7))
+  return m >= 3 && m <= 5 ? 'spring' : m >= 6 && m <= 8 ? 'summer' : m >= 9 && m <= 11 ? 'autumn' : 'winter'
+}
+
+/** 보고 있는 달의 계절을 문서에 표시 (CSS가 배경·장식을 바꿈) */
+let currentSeason: Season = 'autumn'
+export function applySeason(month: string) {
+  currentSeason = seasonOf(month)
+  document.documentElement.setAttribute('data-season', currentSeason)
+  updateStatusBar(loadTheme())
+}
+
+/** 계절 풍경 하늘색 (styles.css 의 --season-sky 와 같은 값) */
+const SEASON_SKY: Record<Season, string> = { spring: '#fde4ec', summer: '#5ccbe3', autumn: '#fbe9d2', winter: '#d3e8f4' }
+
+/** 휴대폰 상단 상태 표시줄 색을 헤더 색과 맞춤 */
+function updateStatusBar(t: Theme) {
+  const dark = t.mode === 'dark' || (t.mode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+  const a = ACCENTS.find((x) => x.id === t.accent) ?? ACCENTS[0]
+  let color: string
+  if (t.seasonal) {
+    const sky = mix(a.light, SEASON_SKY[currentSeason], 0.12)
+    color = dark ? mix('#000000', sky, 0.58) : sky
+  } else {
+    color = dark ? mix(a.dark, '#13141b', 0.38) : a.light
+  }
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color)
 }

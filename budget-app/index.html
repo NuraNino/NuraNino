@@ -10,6 +10,7 @@
         var t = JSON.parse(localStorage.getItem('household-budget:theme') || 'null')
         if (t && (t.mode === 'light' || t.mode === 'dark')) document.documentElement.setAttribute('data-mode', t.mode)
         if (t && t.accent) document.documentElement.setAttribute('data-accent', t.accent)
+        if (t && t.seasonal === false) document.documentElement.setAttribute('data-seasonal', 'off')
       } catch (e) {}
     </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />

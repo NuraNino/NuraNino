@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ArrowDownToLine, ChartColumn, ChevronLeft, ChevronRight, House, Receipt, Settings2, Wallet } from 'lucide-react'
 import { useStore } from './store'
 import { addMonths, monthLabel } from './domain/calc'
@@ -10,6 +10,8 @@ import { Reports } from './views/Reports'
 import { Settings } from './views/Settings'
 import { SyncBadge } from './views/SyncSettings'
 import { pendingInvite } from './sync/SyncProvider'
+import { SeasonLayer } from './views/SeasonLayer'
+import { applySeason, seasonOf } from './theme'
 
 const TABS = [
   { id: 'home', label: '요약', title: '이번 달 요약', Icon: House },
@@ -47,13 +49,12 @@ export function App() {
   }
 
   const current = TABS.find((t) => t.id === tab) ?? TABS[0]
+  useEffect(() => applySeason(month), [month])
 
   return (
     <div className="app">
       <header className="hero">
-        <span className="deco deco-1" aria-hidden />
-        <span className="deco deco-2" aria-hidden />
-        <span className="deco deco-3" aria-hidden />
+        <SeasonLayer season={seasonOf(month)} />
         <div className="hero-top">
           <div className="brand-wrap">
             <span className="brand">우리집 가계부</span>
