@@ -1,5 +1,5 @@
 import { Fragment, useState } from 'react'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Circle, CircleCheck } from 'lucide-react'
 import { useStore } from '../store'
 import { addMonths, monthLabel, monthSummary, offeringDrivesBudget, planOf, sum, won, type CategoryRow } from '../domain/calc'
 import { LineList, OfferingPanel } from './Offering'
@@ -63,6 +63,15 @@ export function Budget({ go }: { go?: (tab: string) => void }) {
       }
     })
 
+  /** 이번 달 다 나간 항목 직접 표시/해제 */
+  const toggleDone = (categoryId: string) =>
+    updatePlan(month, (p) => {
+      const cur = new Set(p.done ?? [])
+      if (cur.has(categoryId)) cur.delete(categoryId)
+      else cur.add(categoryId)
+      return { ...p, done: cur.size ? [...cur] : undefined }
+    })
+
   const copyPrev = () => {
     if (!prevPlan) return
     const hasAny = Object.values(plan.budgets).some((b) => b.amount || b.calc?.length)
@@ -95,6 +104,7 @@ export function Budget({ go }: { go?: (tab: string) => void }) {
             </>
           ) : canExpand ? (
             <td>
+              <span className="name-row">
               <button
                 className="expander"
                 onClick={() => toggle(id)}
@@ -105,6 +115,31 @@ export function Budget({ go }: { go?: (tab: string) => void }) {
                 <span>{c.category.name}</span>
                 {offering ? <span className="tag">헌금 계산</span> : lines.length > 0 ? <span className="tag">계산 {lines.length}</span> : null}
               </button>
+              {calcGroup(g) && (
+                <button
+                  className={`done-chip${c.done ? ' on' : ''}${c.done === 'auto' ? ' auto' : ''}`}
+                  onClick={() => {
+                    if (c.done === 'auto') {
+                      alert('이번 달 반복 항목이 모두 등록(또는 건너뜀)되어 자동으로 완료 처리되었습니다.')
+                      return
+                    }
+                    toggleDone(id)
+                  }}
+                  aria-pressed={!!c.done}
+                  aria-label={`${c.category.name} 이번 달 완료 ${c.done ? '해제' : '표시'}`}
+                  title={
+                    c.done === 'auto'
+                      ? '반복 항목이 모두 등록되어 완료 (남은 금액을 빼지 않음)'
+                      : c.done
+                        ? '이번 달 완료로 표시함 (남은 금액을 빼지 않음)'
+                        : `이번 달 다 나갔으면 눌러 완료 표시 (지금 남은 금액 ${won(c.remaining)}을 예상 월말 잔액에서 뺌)`
+                  }
+                >
+                  {c.done ? <CircleCheck size={16} aria-hidden /> : <Circle size={16} aria-hidden />}
+                  <span>{c.done === 'auto' ? '완료(자동)' : c.done ? '완료' : '완료?'}</span>
+                </button>
+              )}
+              </span>
             </td>
           ) : (
             <td>{c.category.name}</td>
