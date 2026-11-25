@@ -1,5 +1,6 @@
 import { GROUPS, type BudgetData, type Category, type Group, type MonthPlan, type Transaction } from './types'
 import { offeringFor } from './offering'
+import { dueItems } from './recurring'
 
 export const monthOf = (date: string): string => date.slice(0, 7)
 
@@ -60,6 +61,36 @@ export interface CategoryRow {
   actual: number
   diff: number // planned - actual (양수 = 남음)
   memo?: string
+  /** 이번 달 아직 나갈 것으로 보는 금액 (예상 월말 잔액 계산용, 고정비·저축만) */
+  remaining: number
+  /** 이번 달 다 나갔는지: 'manual' 직접 완료 표시, 'auto' 반복 항목이 모두 등록·건너뜀 */
+  done?: 'manual' | 'auto'
+}
+
+export type RemainingInfo = Pick<CategoryRow, 'remaining' | 'done'>
+
+/**
+ * 항목의 "아직 나갈 금액"
+ * 1) 직접 완료 표시 → 0
+ * 2) 이번 달 반복 항목(할부 포함)이 있으면: 모두 등록·건너뛰었으면 0(완료), 아니면 아직 등록 안 된 반복 항목 금액 합계
+ * 3) 반복 항목이 없으면: 예산 − 실지출 (0 미만이면 0)
+ */
+export function remainingFor(
+  data: BudgetData,
+  month: string,
+  categoryId: string,
+  planned: number,
+  actual: number,
+  due = dueItems(data, month),
+): RemainingInfo {
+  if (planOf(data, month).done?.includes(categoryId)) return { remaining: 0, done: 'manual' }
+  const mine = due.filter((d) => d.rule.kind === 'expense' && d.rule.categoryId === categoryId)
+  if (mine.length) {
+    const pending = mine.filter((d) => d.status === 'pending')
+    if (pending.length === 0) return { remaining: 0, done: 'auto' }
+    return { remaining: sum(pending.map((d) => d.rule.amount)) }
+  }
+  return { remaining: Math.max(0, planned - actual) }
 }
 
 export interface GroupRow {
@@ -92,13 +123,16 @@ export function monthSummary(data: BudgetData, month: string): MonthSummary {
   const actualByCat = new Map<string, number>()
   for (const t of txs) actualByCat.set(t.categoryId, (actualByCat.get(t.categoryId) ?? 0) + t.amount)
 
+  const due = dueItems(data, month)
   const groups: GroupRow[] = GROUPS.map((group) => {
     const categories: CategoryRow[] = data.categories
       .filter((c) => c.group === group)
       .map((category) => {
         const planned = plannedAmount(data, month, category.id)
         const actual = actualByCat.get(category.id) ?? 0
-        return { category, planned, actual, diff: planned - actual, memo: plan.budgets[category.id]?.memo }
+        const fixed = group === '고정비' || group === '저축'
+        const rem = fixed ? remainingFor(data, month, category.id, planned, actual, due) : { remaining: 0 }
+        return { category, planned, actual, diff: planned - actual, memo: plan.budgets[category.id]?.memo, ...rem }
       })
       // 보관(archived)된 항목은 이번 달에 계획/지출이 있을 때만 표시
       .filter((r) => !r.category.archived || r.planned !== 0 || r.actual !== 0)
@@ -115,7 +149,7 @@ export function monthSummary(data: BudgetData, month: string): MonthSummary {
     groups
       .filter((g) => g.group === '고정비' || g.group === '저축')
       .flatMap((g) => g.categories)
-      .map((c) => Math.max(0, c.diff)),
+      .map((c) => c.remaining),
   )
   const net = incomeActual - expenseActual
   return {

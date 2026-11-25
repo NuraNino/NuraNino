@@ -28,16 +28,22 @@ export const appliesIn = (rule: RecurringRule, month: string): boolean =>
 /** 이번 달 반복 항목과 등록 상태 */
 export function dueItems(data: BudgetData, month: string): DueItem[] {
   const rules = [...(data.recurring ?? []).filter((r) => appliesIn(r, month)), ...installmentRules(data, month)]
-  const doneIds = new Set([
-    ...txOfMonth(data, month).map((t) => t.recurringId),
-    ...incomesOfMonth(data, month).map((i) => i.recurringId),
-  ])
+  const txs = txOfMonth(data, month)
+  const incs = incomesOfMonth(data, month)
+  const doneIds = new Set([...txs.map((t) => t.recurringId), ...incs.map((i) => i.recurringId)])
+  // 반복 항목으로 등록하지 않고 직접 입력한 같은 지출·수입(같은 분류 + 같은 내용)도 등록된 것으로 봄
+  // (예: 엑셀에서 가져온 달의 내역으로 반복 항목을 만든 경우 다시 등록하라고 하지 않도록)
+  const manualTx = new Set(txs.filter((t) => !t.recurringId).map((t) => `${t.categoryId}|${t.memo.trim()}`))
+  const manualInc = new Set(incs.filter((i) => !i.recurringId).map((i) => i.source.trim()))
+  const isDone = (rule: RecurringRule) =>
+    doneIds.has(rule.id) ||
+    (rule.kind === 'expense' ? manualTx.has(`${rule.categoryId}|${rule.name.trim()}`) : manualInc.has(rule.name.trim()))
   const skipped = new Set(data.recurringSkips?.[month] ?? [])
   return rules
     .map((rule) => ({
       rule,
       date: dueDate(rule, month),
-      status: (doneIds.has(rule.id) ? 'done' : skipped.has(rule.id) ? 'skipped' : 'pending') as DueStatus,
+      status: (isDone(rule) ? 'done' : skipped.has(rule.id) ? 'skipped' : 'pending') as DueStatus,
     }))
     .sort((a, b) => a.date.localeCompare(b.date) || a.rule.name.localeCompare(b.rule.name))
 }

@@ -83,6 +83,8 @@ export interface MonthPlan {
   budgets: Record<string, BudgetLine> // categoryId → 예산
   incomePlan: IncomePlanItem[]
   notes?: string // 피드백 메모
+  /** 이번 달 다 나간 것으로 직접 표시한 항목 (예상 월말 잔액에서 남은 금액을 빼지 않음) */
+  done?: string[]
   /** 이 달의 헌금 계산 */
   offering?: {
     /** 사람별로 직접 더하는 십일조 대상 수입 (실 수입에 없는 수금액 등) */
