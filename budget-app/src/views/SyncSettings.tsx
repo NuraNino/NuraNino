@@ -24,47 +24,92 @@ function useAction() {
 
 function SignIn() {
   const sync = useSync()
+  const [mode, setMode] = useState<'password' | 'code'>('password')
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [sent, setSent] = useState(false)
   const [code, setCode] = useState('')
-  const { busy, error, run } = useAction()
+  const [info, setInfo] = useState('')
+  const { busy, error, setError, run } = useAction()
+  const okEmail = email.includes('@')
+
   return (
     <div className="form">
-      <p className="small muted">
-        두 분이 같은 가계부를 함께 쓰려면 각자 이메일로 로그인하세요. 비밀번호 없이 메일로 온 링크나 6자리 코드로 로그인합니다.
-      </p>
+      <p className="small muted">두 분이 같은 가계부를 함께 쓰려면 각자 이메일로 로그인하세요.</p>
+      <div className="seg two" role="radiogroup" aria-label="로그인 방법">
+        <button type="button" role="radio" aria-checked={mode === 'password'} className={mode === 'password' ? 'on' : ''} onClick={() => setMode('password')}>
+          이메일 + 비밀번호
+        </button>
+        <button type="button" role="radio" aria-checked={mode === 'code'} className={mode === 'code' ? 'on' : ''} onClick={() => setMode('code')}>
+          메일 코드
+        </button>
+      </div>
       <label>
         이메일
         <input type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
       </label>
-      {sent && (
-        <label>
-          메일로 받은 6자리 코드
-          <input inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" />
-        </label>
-      )}
-      {sent && (
-        <p className="small muted">
-          메일의 링크를 눌러도 됩니다. 홈 화면에 추가한 앱으로 쓰고 있다면 링크가 사파리에서 열리므로, 코드를 여기에 입력하세요.
-        </p>
-      )}
-      {error && <p className="error">{error}</p>}
-      <div className="row-end">
-        {!sent ? (
-          <button className="btn primary" disabled={busy || !email.includes('@')} onClick={() => run(async () => (await sync.sendLink(email.trim()), setSent(true)))}>
-            로그인 메일 보내기
-          </button>
-        ) : (
-          <>
-            <button className="btn ghost" disabled={busy} onClick={() => run(() => sync.sendLink(email.trim()))}>
-              다시 보내기
+
+      {mode === 'password' ? (
+        <>
+          <label>
+            로그인 비밀번호
+            <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          </label>
+          <p className="small muted">
+            계정에 들어가는 비밀번호입니다. 다음 단계의 <strong>가계부 비밀번호</strong>(암호화용, 두 분이 공유)와는 다르게 정하세요.
+          </p>
+          {info && <p className="small">{info}</p>}
+          {error && <p className="error">{error}</p>}
+          <div className="row-end">
+            <button
+              className="btn ghost"
+              disabled={busy || !okEmail}
+              onClick={() => {
+                if (password.length < 8) return setError('로그인 비밀번호는 8자 이상으로 정하세요.')
+                setInfo('')
+                void run(async () => {
+                  const r = await sync.signUpPassword(email.trim(), password)
+                  if (r === 'confirm') setInfo('가입 확인 메일을 보냈습니다. 메일의 링크를 누른 뒤(어느 브라우저에서 열려도 괜찮습니다) 여기로 돌아와 "로그인"을 누르세요.')
+                })
+              }}
+            >
+              처음 가입
             </button>
-            <button className="btn primary" disabled={busy || code.trim().length < 6} onClick={() => run(() => sync.verifyCode(email.trim(), code))}>
+            <button className="btn primary" disabled={busy || !okEmail || !password} onClick={() => run(() => sync.signInPassword(email.trim(), password))}>
               로그인
             </button>
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      ) : (
+        <>
+          {sent && (
+            <label>
+              메일로 받은 6자리 코드
+              <input inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" />
+            </label>
+          )}
+          <p className="small muted">
+            메일 양식에 코드가 들어 있을 때만 쓸 수 있습니다(Supabase 메일 양식 설정 필요). 메일의 링크는 홈 화면 앱이 아닌 브라우저에서 열립니다.
+          </p>
+          {error && <p className="error">{error}</p>}
+          <div className="row-end">
+            {!sent ? (
+              <button className="btn primary" disabled={busy || !okEmail} onClick={() => run(async () => (await sync.sendLink(email.trim()), setSent(true)))}>
+                로그인 메일 보내기
+              </button>
+            ) : (
+              <>
+                <button className="btn ghost" disabled={busy} onClick={() => run(() => sync.sendLink(email.trim()))}>
+                  다시 보내기
+                </button>
+                <button className="btn primary" disabled={busy || code.trim().length < 6} onClick={() => run(() => sync.verifyCode(email.trim(), code))}>
+                  로그인
+                </button>
+              </>
+            )}
+          </div>
+        </>
+      )}
     </div>
   )
 }
