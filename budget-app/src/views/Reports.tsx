@@ -13,6 +13,8 @@ import {
 } from '../domain/calc'
 import { GROUPS } from '../domain/types'
 import { Bar, Card, Empty } from '../components'
+import { CategoryBadge, GROUP_CLASS } from '../icons'
+import { DailyChart } from './DailyChart'
 
 const n = (v: number | undefined) => (v ? Math.round(v).toLocaleString('ko-KR') : '')
 
@@ -82,6 +84,23 @@ export function Reports() {
 
   return (
     <div className="stack">
+      <DailyChart />
+
+      {ranking.length > 0 && (
+        <div className="tiles" role="list" aria-label="항목별 지출">
+          {ranking.map(({ id, total: t }) => {
+            const c = cats.get(id)
+            return (
+              <div key={id} role="listitem" className={`tile ${c ? GROUP_CLASS[c.group] : ''}`}>
+                <CategoryBadge category={c} size={32} />
+                <span className="tile-name">{c?.name}</span>
+                <strong className="tile-amt">{won(t)}</strong>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
       <Card title="항목 × 주차">
         {txs.length === 0 ? (
           <Empty>이번 달 지출 내역이 없습니다.</Empty>
@@ -162,8 +181,8 @@ export function Reports() {
             {ranking.map(({ id, total: t }) => (
               <li key={id} className="rank">
                 <div className="row-between">
-                  <span>
-                    <span className="tag">{cats.get(id)?.group}</span> {cats.get(id)?.name}
+                  <span className="rank-name">
+                    <CategoryBadge category={cats.get(id)} size={28} /> {cats.get(id)?.name}
                   </span>
                   <span>
                     {won(t)} <span className="muted small">{Math.round((t / total) * 100)}%</span>
