@@ -11,6 +11,7 @@ import { Settings } from './views/Settings'
 import { SyncBadge } from './views/SyncSettings'
 import { pendingInvite } from './sync/SyncProvider'
 import { SeasonLayer } from './views/SeasonLayer'
+import { PullToRefresh } from './PullToRefresh'
 import { applySeason, seasonOf } from './theme'
 
 const TABS = [
@@ -53,6 +54,7 @@ export function App() {
 
   return (
     <div className="app">
+      <PullToRefresh />
       <header className="hero">
         <SeasonLayer season={seasonOf(month)} />
         <div className="hero-top">

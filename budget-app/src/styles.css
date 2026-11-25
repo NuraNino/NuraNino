@@ -1761,3 +1761,77 @@ body {
 .hero {
   padding-top: calc(22px + env(safe-area-inset-top));
 }
+
+/* ---------- 당겨서 동기화 ---------- */
+html,
+body {
+  /* 사파리 기본 "당겨서 새로고침"(페이지 전체 다시 불러오기) 대신 앱의 당겨서 동기화를 씀 */
+  overscroll-behavior-y: none;
+}
+.ptr-active .hero,
+.ptr-active .content {
+  transform: translateY(var(--ptr, 0px));
+}
+.ptr-animating .hero,
+.ptr-animating .content {
+  transition: transform 0.25s ease;
+}
+.ptr {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: env(safe-area-inset-top);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: none;
+  transition: height 0.25s ease;
+}
+.ptr-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  color: var(--muted);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.16);
+}
+.ptr-icon.ready,
+.ptr-icon.spin {
+  color: var(--primary);
+}
+.ptr-icon.spin svg {
+  animation: ptr-spin 0.8s linear infinite;
+}
+@keyframes ptr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.ptr-msg {
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.16);
+  white-space: nowrap;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ptr-icon.spin svg {
+    animation-duration: 2s;
+  }
+}

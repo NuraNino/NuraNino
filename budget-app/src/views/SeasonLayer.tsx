@@ -59,7 +59,7 @@ function Canopy({ blobs, color }: { blobs: [number, number, number][]; color: st
 function Spring() {
   return (
     <>
-      <rect width={800} height={200} {...f('#fde4ec', 90)} />
+      <rect width={800} height={200} {...f('#fde4ec', 88)} />
       {/* 먼 언덕·호수 */}
       <path d="M0,132 C90,118 170,124 260,120 C360,116 430,126 520,118 C610,110 700,120 800,114 L800,200 L0,200Z" {...f('#cfe8a6')} />
       <path d="M0,136 C120,130 240,138 400,134 C560,130 680,138 800,132 L800,146 L0,146Z" {...f('#8fd0e6')} />
@@ -230,7 +230,7 @@ function Berry({ x, y }: { x: number; y: number }) {
 function Autumn() {
   return (
     <>
-      <rect width={800} height={200} {...f('#fbe9d2', 92)} />
+      <rect width={800} height={200} {...f('#fbe9d2', 88)} />
       {/* 오른쪽 위 큰 잎 (월 이동 아래쪽) */}
       <LongLeaf x={640} y={78} r={-150} s={1.2} color="#b8492f" />
       <LongLeaf x={700} y={24} r={-110} s={1} color="#a63d2c" />
@@ -308,7 +308,7 @@ function Winter() {
   ]
   return (
     <>
-      <rect width={800} height={200} {...f('#d3e8f4', 90)} />
+      <rect width={800} height={200} {...f('#d3e8f4', 88)} />
       {/* 구름 */}
       <path d="M470,58 c0,-8 10,-10 14,-5 c3,-8 16,-8 18,1 c8,-1 10,8 4,10 h-32 c-6,0 -6,-6 -4,-6Z" {...f('#ffffff', 96)} />
       <path d="M90,30 c0,-7 9,-9 12,-4 c3,-7 14,-7 16,1 c7,-1 9,7 3,9 h-28 c-5,0 -5,-6 -3,-6Z" {...f('#ffffff', 96)} />
