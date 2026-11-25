@@ -93,7 +93,7 @@ export function App() {
         {tab === 'home' && <Dashboard go={setTab} />}
         {tab === 'tx' && <Transactions go={setTab} />}
         {tab === 'income' && <Income />}
-        {tab === 'budget' && <Budget />}
+        {tab === 'budget' && <Budget go={setTab} />}
         {tab === 'reports' && <Reports />}
         {tab === 'settings' && <Settings />}
       </main>
